@@ -2,6 +2,7 @@ import { useState } from "react";
 import idIcon from "../../assets/login/id.svg";
 import passwordIcon from "../../assets/login/password.svg";
 import eyeIcon from "../../assets/login/eye.svg";
+import eyeOffIcon from "../../assets/login/eye-off.svg";
 import mailIcon from "../../assets/login/mail.svg";
 
 export default function LoginForm() {
@@ -57,7 +58,7 @@ export default function LoginForm() {
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2"
             >
-              <img src={eyeIcon} alt="" width={19} height={18} />
+              <img src={showPassword ? eyeIcon : eyeOffIcon} alt="" width={20} height={20} />
             </button>
           </div>
         </div>
