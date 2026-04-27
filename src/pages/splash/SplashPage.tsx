@@ -55,10 +55,10 @@ export default function SplashPage() {
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className="text-[42px] font-black leading-none tracking-[-2px] text-white"
+              className="text-[35px] font-black leading-none tracking-[-2px] text-white"
               style={{ fontFamily: "'Roboto', sans-serif" }}
             >
-              K
+              KM
             </span>
           </div>
           {/* Heart badge */}
