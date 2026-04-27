@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import idIcon from "../../assets/login/id.svg";
 import passwordIcon from "../../assets/login/password.svg";
 import eyeIcon from "../../assets/login/eye.svg";
@@ -6,6 +7,7 @@ import eyeOffIcon from "../../assets/login/eye-off.svg";
 import mailIcon from "../../assets/login/mail.svg";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
@@ -90,7 +92,11 @@ export default function LoginForm() {
       {/* Sign up */}
       <div className="mt-8 border-t border-[#f3f4f6] pt-6 text-center text-sm">
         <span className="text-[#6b7280]">아직 계정이 없으신가요? </span>
-        <button type="button" className="font-bold text-[#7a9e82]">
+        <button
+          type="button"
+          onClick={() => navigate("/signup")}
+          className="font-bold text-[#7a9e82]"
+        >
           회원가입
         </button>
       </div>
