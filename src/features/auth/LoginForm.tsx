@@ -68,6 +68,7 @@ export default function LoginForm() {
         {/* Login button */}
         <button
           type="button"
+          onClick={() => navigate("/onboarding")}
           className="mt-2 h-12 w-full rounded-xl text-sm font-bold text-white"
           style={{
             background:
