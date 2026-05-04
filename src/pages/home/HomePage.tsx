@@ -1,5 +1,25 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  pill5,
+  recIconBell,
+  recIconBookmarkActive,
+  recIconBookmarkMuted,
+  recIconClock,
+  recIconFilter,
+  recIconList,
+  recIconLocation,
+  recIconSearch,
+  recIconSound,
+  recIconSparkle,
+  recIconSunrise,
+  recIconUser,
+  recPill1,
+  recPill2,
+  recPill3,
+  recPill4,
+} from "../../assets/figma/home";
+import AppBottomNav from "../../features/layout/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
 import SearchFilterSheet from "../../features/home/SearchFilterSheet";
 type RoommatePost = {
@@ -60,7 +80,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
               }}
             >
               <div className="h-[18px] w-[18.75px]">
-                <IconImg src="/assets/figma/home/rec-icon-user.png" alt="" />
+                <IconImg src={recIconUser} alt="" />
               </div>
             </div>
             <div className="flex flex-col items-start">
@@ -83,7 +103,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 
         <div className="flex items-center gap-[6px] pb-[8px]">
           <div className="h-[14px] w-[14.578px]">
-            <IconImg src="/assets/figma/home/rec-icon-location.png" alt="" />
+            <IconImg src={recIconLocation} alt="" />
           </div>
           <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.dormLabel}</div>
         </div>
@@ -95,19 +115,19 @@ function RoommateCard({ post }: { post: RoommatePost }) {
         <div className="flex items-center gap-[12px] pb-[12px]">
           <div className="flex items-center gap-[4px]">
             <div className="h-[12px] w-[12.5px]">
-              <IconImg src="/assets/figma/home/rec-icon-clock.png" alt="" />
+              <IconImg src={recIconClock} alt="" />
             </div>
             <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.sleepTime}</div>
           </div>
           <div className="flex items-center gap-[4px]">
             <div className="h-[12px] w-[12.5px]">
-              <IconImg src="/assets/figma/home/rec-icon-sunrise.png" alt="" />
+              <IconImg src={recIconSunrise} alt="" />
             </div>
             <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.wakeTime}</div>
           </div>
           <div className="flex items-center gap-[4px]">
             <div className="h-[12px] w-[12.5px]">
-              <IconImg src="/assets/figma/home/rec-icon-sound.png" alt="" />
+              <IconImg src={recIconSound} alt="" />
             </div>
             <span className="h-px w-px" aria-hidden />
           </div>
@@ -125,47 +145,6 @@ function RoommateCard({ post }: { post: RoommatePost }) {
   );
 }
 
-function BottomNav() {
-  return (
-    <nav className="fixed bottom-0 left-0 z-10 h-[77px] w-full border-t border-[rgba(122,158,130,0.1)] bg-[rgba(255,255,255,0.92)] pt-px backdrop-blur-[6px]">
-      <div className="flex h-[76px] w-full items-center justify-between px-[16.6px] py-[8px]">
-        <Link to="/home" className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
-          <div className="h-[20px] w-[20.828px]">
-            <IconImg src="/assets/figma/home/nav-home.png" alt="" />
-          </div>
-          <span className="text-[12px] font-medium leading-[16px] text-[#7a9e82]">홈</span>
-        </Link>
-        <a href="#" className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
-          <div className="h-[20px] w-[20.828px]">
-            <IconImg src="/assets/figma/home/nav-chat.png" alt="" />
-          </div>
-          <span className="text-[12px] font-medium leading-[16px] text-[#9ca3af]">채팅</span>
-        </a>
-        <Link to="/post/create" className="flex h-[60px] w-[72px] flex-col items-center justify-center gap-[2px] px-[12px] py-[4px]">
-          <div className="flex h-[48px] w-[48px] items-center justify-center overflow-hidden rounded-[16px] bg-[#7a9e82] shadow-[0px_2px_4px_-2px_rgba(0,0,0,0.1),0px_4px_6px_-1px_rgba(0,0,0,0.1)]">
-            <div className="h-[24px] w-[25px]">
-              <IconImg src="/assets/figma/home/nav-plus.png" alt="" />
-            </div>
-          </div>
-          <span className="pt-[2px] text-[12px] font-medium leading-[16px] text-[#9ca3af]">글쓰기</span>
-        </Link>
-        <a href="#" className="flex h-[54px] w-[57.125px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
-          <div className="h-[20px] w-[20.828px]">
-            <IconImg src="/assets/figma/home/nav-calendar.png" alt="" />
-          </div>
-          <span className="text-[12px] font-medium leading-[16px] text-[#9ca3af]">캘린더</span>
-        </a>
-        <a href="#" className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
-          <div className="h-[20px] w-[20.828px]">
-            <IconImg src="/assets/figma/home/nav-my.png" alt="" />
-          </div>
-          <span className="text-[12px] font-medium leading-[16px] text-[#9ca3af]">마이</span>
-        </a>
-      </div>
-    </nav>
-  );
-}
-
 export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -180,11 +159,11 @@ export default function HomePage() {
       title: "조용하고 깔끔한 룸메이트 구해요!",
       sleepTime: "23:00 - 24:00",
       wakeTime: "07:00 - 08:00",
-      bookmarkIcon: "/assets/figma/home/rec-icon-bookmark-active.png",
+      bookmarkIcon: recIconBookmarkActive,
       tags: [
-        { label: "일찍 취침", bg: "/assets/figma/home/rec-pill-1.png" },
-        { label: "청결", bg: "/assets/figma/home/rec-pill-2.png" },
-        { label: "흡연 안함", bg: "/assets/figma/home/rec-pill-1.png" },
+        { label: "일찍 취침", bg: recPill1 },
+        { label: "청결", bg: recPill2 },
+        { label: "흡연 안함", bg: recPill1 },
       ],
       date: "2026-03-20",
     },
@@ -196,11 +175,11 @@ export default function HomePage() {
       title: "신입생! 같이 기숙사 생활 잘 해봐요",
       sleepTime: "22:00 - 23:00",
       wakeTime: "06:30 - 07:30",
-      bookmarkIcon: "/assets/figma/home/rec-icon-bookmark-muted.png",
+      bookmarkIcon: recIconBookmarkMuted,
       tags: [
-        { label: "11시 취침", bg: "/assets/figma/home/rec-pill-3.png" },
-        { label: "청결 중시", bg: "/assets/figma/home/rec-pill-1.png" },
-        { label: "신입생", bg: "/assets/figma/home/rec-pill-4.png" },
+        { label: "11시 취침", bg: recPill3 },
+        { label: "청결 중시", bg: recPill1 },
+        { label: "신입생", bg: recPill4 },
       ],
       date: "2026-03-21",
     },
@@ -212,11 +191,11 @@ export default function HomePage() {
       title: "건축과 2학년 - 작업 많지만 배려할게요!",
       sleepTime: "02:00 - 03:00",
       wakeTime: "08:00 - 09:00",
-      bookmarkIcon: "/assets/figma/home/rec-icon-bookmark-muted.png",
+      bookmarkIcon: recIconBookmarkMuted,
       tags: [
-        { label: "야작", bg: "/assets/figma/home/rec-pill-2.png" },
-        { label: "이어폰 착용", bg: "/assets/figma/home/pill-5.png" },
-        { label: "배려", bg: "/assets/figma/home/rec-pill-2.png" },
+        { label: "야작", bg: recPill2 },
+        { label: "이어폰 착용", bg: pill5 },
+        { label: "배려", bg: recPill2 },
       ],
       date: "2026-03-17",
     },
@@ -264,7 +243,7 @@ export default function HomePage() {
               </div>
               <button type="button" className="relative flex h-[36px] w-[36px] items-center justify-center" aria-label="알림">
                 <div className="h-[20px] w-[20.828px]">
-                  <IconImg src="/assets/figma/home/rec-icon-bell.png" alt="" />
+                  <IconImg src={recIconBell} alt="" />
                 </div>
                 <span className="absolute left-[24px] top-[4px] h-[8px] w-[8px] rounded-full bg-[#f87171]" />
               </button>
@@ -277,7 +256,7 @@ export default function HomePage() {
                 <span className="text-[#9ca3af]">닉네임, 학과, 키워드로 검색...</span>
               </div>
               <div className="absolute left-[12px] top-[11px] h-[20px] w-[20px]">
-                <IconImg src="/assets/figma/home/rec-icon-search.png" alt="" />
+                <IconImg src={recIconSearch} alt="" />
               </div>
             </div>
           </div>
@@ -289,7 +268,7 @@ export default function HomePage() {
               className={`flex h-[32px] w-[154.5px] items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "all" ? "bg-white" : ""}`}
             >
               <div className="h-[14px] w-[14.578px]">
-                <IconImg src="/assets/figma/home/rec-icon-list.png" alt="" />
+                <IconImg src={recIconList} alt="" />
               </div>
               <span className={`text-[12px] font-bold leading-[16px] ${activeTab === "all" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}>전체 구인글</span>
             </button>
@@ -300,7 +279,7 @@ export default function HomePage() {
               className={`flex h-[32px] w-[154.5px] items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "recommended" ? "bg-white" : ""}`}
             >
               <div className="h-[14px] w-[14.578px]">
-                <IconImg src="/assets/figma/home/rec-icon-sparkle.png" alt="" />
+                <IconImg src={recIconSparkle} alt="" />
               </div>
               <span className={`text-[12px] font-bold leading-[16px] ${activeTab === "recommended" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}>추천 룸메이트</span>
             </button>
@@ -337,7 +316,7 @@ export default function HomePage() {
             className="flex h-[30px] w-[70.094px] items-center gap-[6px] rounded-[12px] border border-[rgba(122,158,130,0.2)] bg-[rgba(255,255,255,0.6)] px-[13px] py-[7px]"
           >
             <div className="h-[14px] w-[14.578px]">
-              <IconImg src="/assets/figma/home/rec-icon-filter.png" alt="" />
+              <IconImg src={recIconFilter} alt="" />
             </div>
             <span className="text-[12px] font-semibold leading-[16px] text-[#6b7280]">필터</span>
           </button>
@@ -351,7 +330,7 @@ export default function HomePage() {
           ))}
         </main>
 
-        <BottomNav />
+        <AppBottomNav />
         <MatchingAlgorithmModal
           open={isAlgorithmOpen}
           onClose={() => setIsAlgorithmOpen(false)}
