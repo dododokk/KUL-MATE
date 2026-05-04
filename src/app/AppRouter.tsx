@@ -8,6 +8,7 @@ import ReportPage from "../pages/report/ReportPage";
 import SignUpPage from "../pages/signUp/SignUpPage";
 import SplashPage from "../pages/splash/SplashPage";
 import SurveyPage from "../pages/survey/SurveyPage";
+import AdminPage from "../pages/admin/AdminPage";
 
 export default function AppRouter() {
   return (
@@ -22,6 +23,7 @@ export default function AppRouter() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/survey" element={<SurveyPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
