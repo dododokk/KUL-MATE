@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+
 type SearchFilterSheetProps = {
   open: boolean;
   onClose: () => void;
@@ -6,19 +8,22 @@ type SearchFilterSheetProps = {
 type FilterSectionProps = {
   title: string;
   options: string[];
+  selectedOption: string;
+  onSelect: (opt: string) => void;
 };
 
-function FilterSection({ title, options }: FilterSectionProps) {
+function FilterSection({ title, options, selectedOption, onSelect }: FilterSectionProps) {
   return (
     <section className="pt-6 first:pt-0">
       <p className="pb-3 text-[12px] font-bold tracking-[0.6px] text-[#6b7280]">{title}</p>
       <div className="flex flex-wrap gap-2">
-        {options.map((opt, idx) => (
+        {options.map((opt) => (
           <button
             key={opt}
             type="button"
+            onClick={() => onSelect(opt)}
             className={
-              idx === 0
+              selectedOption === opt
                 ? "h-[34px] rounded-full border border-[#7a9e82] bg-[#7a9e82] px-[17px] text-[12px] font-semibold text-white"
                 : "h-[34px] rounded-full border border-[#e5e7eb] bg-white px-[17px] text-[12px] font-semibold text-[#6b7280]"
             }
@@ -33,6 +38,33 @@ function FilterSection({ title, options }: FilterSectionProps) {
 }
 
 export default function SearchFilterSheet({ open, onClose }: SearchFilterSheetProps) {
+  const [filters, setFilters] = useState({
+    residence: "전체",
+    smoking: "전체",
+    shower: "전체",
+    sleep: "전체",
+    habit: "전체",
+  });
+
+  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleReset = () => {
+    setFilters({
+      residence: "전체",
+      smoking: "전체",
+      shower: "전체",
+      sleep: "전체",
+      habit: "전체",
+    });
+  };
+
+  const handleApply = () => {
+    console.log("적용할 필터:", filters);
+    onClose();
+  };
+
   if (!open) return null;
 
   return (
@@ -47,19 +79,51 @@ export default function SearchFilterSheet({ open, onClose }: SearchFilterSheetPr
         </div>
 
         <div className="mt-5 max-h-[62vh] overflow-y-auto pr-1">
-          <FilterSection title="생활관" options={["전체", "레이크홀", "비레이크홀"]} />
-          <FilterSection title="흡연 여부" options={["전체", "비흡연", "흡연"]} />
-          <FilterSection title="샤워 시간" options={["전체", "아침", "저녁"]} />
-          <FilterSection title="취침 시간대" options={["전체", "23시 이전", "1시 이후"]} />
-          <FilterSection title="잠버릇" options={["전체", "없음", "보통", "심함"]} />
-          <FilterSection title="청소 빈도 (최소)" options={["전체", "월 1회+", "월 2회+", "주 1회+", "주 2회+"]} />
+          <FilterSection 
+            title="생활관" 
+            options={["전체", "레이크홀", "비레이크홀"]} 
+            selectedOption={filters.residence}
+            onSelect={(val) => handleFilterChange("residence", val)}
+          />
+          <FilterSection 
+            title="흡연 여부" 
+            options={["전체", "비흡연", "흡연"]} 
+            selectedOption={filters.smoking}
+            onSelect={(val) => handleFilterChange("smoking", val)}
+          />
+          <FilterSection 
+            title="샤워 시간" 
+            options={["전체", "아침", "저녁"]} 
+            selectedOption={filters.shower}
+            onSelect={(val) => handleFilterChange("shower", val)}
+          />
+          <FilterSection 
+            title="취침 시간대" 
+            options={["전체", "23시 이전", "1시 이후"]} 
+            selectedOption={filters.sleep}
+            onSelect={(val) => handleFilterChange("sleep", val)}
+          />
+          <FilterSection 
+            title="잠버릇" 
+            options={["전체", "없음", "보통", "심함"]} 
+            selectedOption={filters.habit}
+            onSelect={(val) => handleFilterChange("habit", val)}
+          />
         </div>
 
         <div className="mt-5 flex gap-3">
-          <button type="button" className="h-[50px] flex-1 rounded-[16px] border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#6b7280]">
+          <button 
+            type="button" 
+            onClick={handleReset}
+            className="h-[50px] flex-1 rounded-[16px] border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#6b7280]"
+          >
             초기화
           </button>
-          <button type="button" onClick={onClose} className="h-[50px] flex-1 rounded-[16px] bg-[#7a9e82] text-[14px] font-bold text-white">
+          <button 
+            type="button" 
+            onClick={handleApply}
+            className="h-[50px] flex-1 rounded-[16px] bg-[#7a9e82] text-[14px] font-bold text-white"
+          >
             적용하기
           </button>
         </div>
@@ -67,4 +131,3 @@ export default function SearchFilterSheet({ open, onClose }: SearchFilterSheetPr
     </div>
   );
 }
-

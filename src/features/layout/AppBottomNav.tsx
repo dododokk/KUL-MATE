@@ -8,7 +8,7 @@ function NavIcon({ src, alt }: { src: string; alt: string }) {
 }
 
 function labelClass(active: boolean) {
-  return `text-[12px] font-medium leading-[16px] ${active ? "text-[#7a9e82]" : "text-[#9ca3af]"}`;
+  return `whitespace-nowrap xtext-[12px] font-medium leading-[16px] ${active ? "text-[#7a9e82]" : "text-[#9ca3af]"}`;
 }
 
 export type AppBottomNavProps = {
@@ -20,11 +20,12 @@ export default function AppBottomNav({ active: activeProp }: AppBottomNavProps) 
   const { pathname } = useLocation();
 
   const inferred: NavKey | null =
-    pathname === "/home" || pathname.startsWith("/home")
-      ? "home"
-      : pathname.startsWith("/post/create")
-        ? "write"
-        : null;
+    pathname === "/" || pathname.startsWith("/home") ? "home"
+      : pathname.startsWith("/chat") ? "chat"
+      : pathname.startsWith("/post/create") ? "write"
+      : pathname.startsWith("/calendar") ? "calendar"
+      : pathname.startsWith("/my") ? "my"
+      : null;
 
   const active = activeProp !== undefined ? activeProp : inferred;
 
@@ -41,12 +42,15 @@ export default function AppBottomNav({ active: activeProp }: AppBottomNavProps) 
           <span className={labelClass(active === "home")}>홈</span>
         </Link>
 
-        <button type="button" className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
+        <Link 
+          to="/chat" 
+          className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]"
+        >
           <div className="h-[20px] w-[20.828px]">
             <NavIcon src={navChat} alt="" />
           </div>
           <span className={labelClass(active === "chat")}>채팅</span>
-        </button>
+        </Link>
 
         <Link
           to="/post/create"
@@ -60,19 +64,25 @@ export default function AppBottomNav({ active: activeProp }: AppBottomNavProps) 
           <span className={`pt-[2px] ${labelClass(active === "write")}`}>글쓰기</span>
         </Link>
 
-        <button type="button" className="flex h-[54px] w-[57.125px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
+        <Link 
+          to="/calendar" 
+          className="flex h-[54px] w-[57.125px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]"
+        >
           <div className="h-[20px] w-[20.828px]">
             <NavIcon src={navCalendar} alt="" />
           </div>
           <span className={labelClass(active === "calendar")}>캘린더</span>
-        </button>
+        </Link>
 
-        <button type="button" className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]">
+        <Link 
+          to="/my" 
+          className="flex h-[54px] w-[48px] flex-col items-center justify-center gap-[2px] rounded-[12px] px-[12px] py-[6px]"
+        >
           <div className="h-[20px] w-[20.828px]">
             <NavIcon src={navMy} alt="" />
           </div>
           <span className={labelClass(active === "my")}>마이</span>
-        </button>
+        </Link>
       </div>
     </nav>
   );

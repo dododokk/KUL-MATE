@@ -1,28 +1,74 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  recIconBookmarkActive,
+  recIconBookmarkMuted,
+  recIconBack,
+  recIconReport,
+} from "../../assets/figma/home"; 
 
 const infoCards = [
   ["생활관", "레이크홀"],
-  ["MBTI", "ESTJ"],
+  ["MBTI", "ENFP"],
   ["흡연", "비흡연"],
-  ["방에서 취식", "취식 X"],
+  ["방에서 취식", "취식 O"],
   ["샤워 시간", "아침"],
   ["잠버릇", "없음"],
   ["본가 방문", "2주마다"],
-  ["거주 기간", "-"],
+  ["거주 기간", "4개월"],
   ["취침", "23:00 ~ 24:00"],
   ["기상", "07:00 ~ 08:00"],
   ["귀가", "18:00 ~ 21:00"],
 ];
 
+function SensitivityDots({ score }: { score: number }) {
+  return (
+    <div className="flex items-center gap-[4px]">
+      {[1, 2, 3, 4, 5].map((level) => (
+        <div
+          key={level}
+          className={`h-[8px] w-[8px] rounded-full ${
+            level <= score ? "bg-[#7a9e82]" : "bg-[#e5e7eb]"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function PostDetailPage() {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const handleBookmarkToggle = () => {
+    setIsBookmarked((prev) => !prev);
+  };
+
   return (
     <div className="min-h-screen bg-[#f8faf8] pb-28">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
-        <Link to="/home" className="h-9 w-9 text-center leading-9 text-[#6b7280]">←</Link>
+        <Link to="/home" className="h-9 w-9 text-center leading-9 text-[#6b7280]"><img 
+            src={recIconBack} 
+            alt="뒤로가기 아이콘" 
+            className="h-6 w-6 object-contain" 
+          /></Link>
         <h1 className="text-[14px] font-bold text-[#111827]">구인글 상세</h1>
-        <div className="flex w-[76px] justify-end gap-1 text-[#9ca3af]">
-          <span className="h-9 w-9 text-center leading-9">🔖</span>
-          <Link to="/report" className="h-9 w-9 text-center leading-9">⚑</Link>
+        
+        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
+          <button 
+            type="button"
+            onClick={handleBookmarkToggle}
+            className="flex h-9 w-9 items-center justify-center"
+            aria-label="북마크"
+          >
+            <img 
+              src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted} 
+              alt="북마크" 
+              className="block h-[20px] w-[20px]"
+              draggable={false}
+            />
+          </button>
+          
+          <Link to="/report" className="flex h-9 w-9 items-center justify-center"><img src={recIconReport} alt="신고하기 아이콘" className="h-6 w-6 object-contain" /></Link>
         </div>
       </header>
 
@@ -52,7 +98,7 @@ export default function PostDetailPage() {
             방은 항상 깔끔하게 유지해요. 주말에도 주로 도서관에 있어서 방에 없을 때가 많아요.
           </p>
           <div className="mt-3 flex gap-[6px]">
-            {["일찍 취침", "청결", "흡연 안함"].map((tag) => (
+            {["비흡연", "ENFP", "아침샤워"].map((tag) => (
               <span key={tag} className="rounded-full bg-[rgba(122,158,130,0.1)] px-[10px] py-1 text-[12px] font-medium text-[#7a9e82]">{tag}</span>
             ))}
           </div>
@@ -68,10 +114,22 @@ export default function PostDetailPage() {
               </div>
             ))}
           </div>
-          <div className="mt-4 space-y-2 text-[12px] text-[#6b7280]">
-            <div className="flex items-center justify-between"><span>청소 빈도</span><span>●●●●●</span><span>매일</span></div>
-            <div className="flex items-center justify-between"><span>정돈 민감도</span><span>●●●●○</span><span>강함</span></div>
-            <div className="flex items-center justify-between"><span>온도 민감도</span><span>●●○○○</span><span>약함</span></div>
+          <div className="mt-5 space-y-3 text-[12px] text-[#6b7280]">
+            <div className="flex items-center justify-between">
+            <span className="w-20 whitespace-nowrap">청소 빈도</span>
+              <SensitivityDots score={5} />
+              <span className="w-14 whitespace-nowrap text-right font-medium text-[#4b5563]">매우 자주</span>
+            </div>
+            <div className="flex items-center justify-between">
+            <span className="w-20 whitespace-nowrap">정돈 민감도</span>
+              <SensitivityDots score={4} />
+              <span className="w-14 whitespace-nowrap text-right font-medium text-[#4b5563]">강함</span>
+            </div>
+            <div className="flex items-center justify-between">
+            <span className="w-20 whitespace-nowrap">온도 민감도</span>
+              <SensitivityDots score={2} />
+              <span className="w-14 whitespace-nowrap text-right font-medium text-[#4b5563]">약함</span>
+            </div>
           </div>
         </section>
 
@@ -87,4 +145,3 @@ export default function PostDetailPage() {
     </div>
   );
 }
-

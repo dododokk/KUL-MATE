@@ -36,3 +36,5 @@ export { default as recPill1 } from "./rec-pill-1.png";
 export { default as recPill2 } from "./rec-pill-2.png";
 export { default as recPill3 } from "./rec-pill-3.png";
 export { default as recPill4 } from "./rec-pill-4.png";
+export { default as recIconBack } from "./rec-icon-back.png";
+export { default as recIconReport} from "./rec-icon-report.png";
