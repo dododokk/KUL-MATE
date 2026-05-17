@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  pill5,
   recIconBell,
   recIconBookmarkActive,
   recIconBookmarkMuted,
@@ -15,8 +14,6 @@ import {
   recIconUser,
   recPill1,
   recPill2,
-  recPill3,
-  recPill4,
 } from "../../assets/figma/home";
 import AppBottomNav from "../../features/layout/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
@@ -304,7 +301,6 @@ export default function HomePage() {
             <div className="h-[14px] w-[14.578px]">
               <IconImg src={recIconFilter} alt="" />
             </div>
-            {/* 수정됨: whitespace-nowrap 추가로 '필터' 글자 줄바꿈 방지 */}
             <span className="whitespace-nowrap text-[12px] font-semibold leading-[16px] text-[#6b7280]">필터</span>
           </button>
         </section>
