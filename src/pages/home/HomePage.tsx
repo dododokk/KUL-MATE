@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  pill5,
   recIconBell,
   recIconBookmarkActive,
   recIconBookmarkMuted,
@@ -10,18 +9,16 @@ import {
   recIconList,
   recIconLocation,
   recIconSearch,
-  recIconSound,
   recIconSparkle,
   recIconSunrise,
   recIconUser,
   recPill1,
   recPill2,
-  recPill3,
-  recPill4,
 } from "../../assets/figma/home";
 import AppBottomNav from "../../features/layout/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
 import SearchFilterSheet from "../../features/home/SearchFilterSheet";
+
 type RoommatePost = {
   id: string;
   nickname: string;
@@ -67,6 +64,17 @@ function ScoreBadge({ score, tone }: { score: string; tone: RoommatePost["scoreT
 }
 
 function RoommateCard({ post }: { post: RoommatePost }) {
+  const [isBookmarked, setIsBookmarked] = useState(
+    post.bookmarkIcon === recIconBookmarkActive
+  );
+
+  const handleBookmarkToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsBookmarked((prev) => !prev);
+  };
+
   return (
     <article className="w-full">
       <div className="w-full rounded-[16px] border border-[rgba(122,158,130,0.1)] bg-[rgba(255,255,255,0.7)] p-[17px] backdrop-blur-[2px]">
@@ -85,7 +93,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             </div>
             <div className="flex flex-col items-start">
               <div className="text-[14px] font-bold leading-[20px] text-[#111827]">{post.nickname}</div>
-              <div className="text-[12px] leading-[16px] text-[#9ca3af]">{post.majorYear}</div>
+              <div className="whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">{post.majorYear}</div>
             </div>
           </div>
 
@@ -93,9 +101,18 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             {post.score && post.scoreTone ? (
               <ScoreBadge score={post.score} tone={post.scoreTone} />
             ) : null}
-            <button type="button" className="flex h-[32px] w-[32px] items-center justify-center" aria-label="북마크">
+            
+            <button 
+              type="button" 
+              className="flex h-[32px] w-[32px] items-center justify-center" 
+              aria-label="북마크"
+              onClick={handleBookmarkToggle}
+            >
               <div className="h-[18px] w-[18.75px]">
-                <IconImg src={post.bookmarkIcon} alt="" />
+                <IconImg 
+                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted} 
+                  alt="북마크" 
+                />
               </div>
             </button>
           </div>
@@ -126,9 +143,6 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.wakeTime}</div>
           </div>
           <div className="flex items-center gap-[4px]">
-            <div className="h-[12px] w-[12.5px]">
-              <IconImg src={recIconSound} alt="" />
-            </div>
             <span className="h-px w-px" aria-hidden />
           </div>
         </div>
@@ -150,55 +164,24 @@ export default function HomePage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "recommended">("recommended");
 
+  // 수정됨: 첫 번째 데이터만 남기고 모두 제거
   const allPosts: RoommatePost[] = [
     {
       id: "1",
       nickname: "코딩고수민준",
-      majorYear: "컴퓨터공학과 2학년",
-      dormLabel: "레이크홀 · \u200b",
+      majorYear: "컴퓨터공학부 24학번 05년생", // 학부로 텍스트 수정됨
+      dormLabel: "레이크홀\u200b",
       title: "조용하고 깔끔한 룸메이트 구해요!",
       sleepTime: "23:00 - 24:00",
       wakeTime: "07:00 - 08:00",
       bookmarkIcon: recIconBookmarkActive,
       tags: [
-        { label: "일찍 취침", bg: recPill1 },
-        { label: "청결", bg: recPill2 },
-        { label: "흡연 안함", bg: recPill1 },
+        { label: "비흡연", bg: recPill1 },
+        { label: "ENFP", bg: recPill2 },
+        { label: "아침샤워", bg: recPill1 },
       ],
       date: "2026-03-20",
-    },
-    {
-      id: "2",
-      nickname: "새내기전전지호",
-      majorYear: "전기전자공학과 1학년",
-      dormLabel: "레이크홀 · \u200b",
-      title: "신입생! 같이 기숙사 생활 잘 해봐요",
-      sleepTime: "22:00 - 23:00",
-      wakeTime: "06:30 - 07:30",
-      bookmarkIcon: recIconBookmarkMuted,
-      tags: [
-        { label: "11시 취침", bg: recPill3 },
-        { label: "청결 중시", bg: recPill1 },
-        { label: "신입생", bg: recPill4 },
-      ],
-      date: "2026-03-21",
-    },
-    {
-      id: "3",
-      nickname: "건축하는도현",
-      majorYear: "건축학과 2학년",
-      dormLabel: "레이크홀 · \u200b",
-      title: "건축과 2학년 - 작업 많지만 배려할게요!",
-      sleepTime: "02:00 - 03:00",
-      wakeTime: "08:00 - 09:00",
-      bookmarkIcon: recIconBookmarkMuted,
-      tags: [
-        { label: "야작", bg: recPill2 },
-        { label: "이어폰 착용", bg: pill5 },
-        { label: "배려", bg: recPill2 },
-      ],
-      date: "2026-03-17",
-    },
+    }
   ];
 
   const recommendedPosts = useMemo(
@@ -261,11 +244,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex h-[42px] w-full items-center rounded-[12px] border border-[rgba(122,158,130,0.1)] bg-[rgba(243,247,244,0.4)] p-[5px]">
+          <div className="relative flex h-[42px] w-full items-center rounded-[12px] border border-[rgba(122,158,130,0.1)] bg-[rgba(243,247,244,0.4)] p-[5px]">
             <button
               type="button"
               onClick={() => setActiveTab("all")}
-              className={`flex h-[32px] w-[154.5px] items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "all" ? "bg-white" : ""}`}
+              className={`flex h-[32px] flex-1 items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "all" ? "bg-white" : ""}`}
             >
               <div className="h-[14px] w-[14.578px]">
                 <IconImg src={recIconList} alt="" />
@@ -276,7 +259,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setActiveTab("recommended")}
-              className={`flex h-[32px] w-[154.5px] items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "recommended" ? "bg-white" : ""}`}
+              className={`flex h-[32px] flex-1 items-center justify-center gap-[6px] rounded-[8px] py-[8px] ${activeTab === "recommended" ? "bg-white" : ""}`}
             >
               <div className="h-[14px] w-[14.578px]">
                 <IconImg src={recIconSparkle} alt="" />
@@ -287,7 +270,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setIsAlgorithmOpen(true)}
-              className="ml-auto flex h-[16px] w-[16px] items-center justify-center rounded-full bg-[rgba(122,158,130,0.1)]"
+              className="absolute right-[12px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-[rgba(122,158,130,0.1)]"
               aria-label="도움말"
             >
               <span className="text-[10px] leading-[15px] text-[#7a9e82]">?</span>
@@ -318,7 +301,7 @@ export default function HomePage() {
             <div className="h-[14px] w-[14.578px]">
               <IconImg src={recIconFilter} alt="" />
             </div>
-            <span className="text-[12px] font-semibold leading-[16px] text-[#6b7280]">필터</span>
+            <span className="whitespace-nowrap text-[12px] font-semibold leading-[16px] text-[#6b7280]">필터</span>
           </button>
         </section>
 
@@ -343,4 +326,3 @@ export default function HomePage() {
     </div>
   );
 }
-
