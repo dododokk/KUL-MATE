@@ -11,6 +11,7 @@ import SurveyPage from "../pages/survey/SurveyPage";
 import AdminPage from "../pages/admin/AdminPage";
 import ChatListPage from "../pages/chat/ChatListPage";
 import ChatDetailPage from "../pages/chat/ChatDetailPage";
+import AlarmPage from "../pages/alarm/AlarmPage";
 
 export default function AppRouter() {
   return (
@@ -28,6 +29,7 @@ export default function AppRouter() {
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/survey" element={<SurveyPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/alarm" element={<AlarmPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
