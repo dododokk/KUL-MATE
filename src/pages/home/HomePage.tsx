@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   recIconBell,
   recIconBookmarkActive,
@@ -194,8 +194,10 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const hasAlarm = true; // 읽지 않은 알림이 있으면 true
   const [activeTab, setActiveTab] = useState<"all" | "recommended">(
     "recommended",
   );
@@ -266,11 +268,14 @@ export default function HomePage() {
                 type="button"
                 className="relative flex h-[36px] w-[36px] items-center justify-center"
                 aria-label="알림"
+                onClick={() => navigate("/alarm")}
               >
                 <div className="h-[20px] w-[20.828px]">
                   <IconImg src={recIconBell} alt="" />
                 </div>
-                <span className="absolute left-[24px] top-[4px] h-[8px] w-[8px] rounded-full bg-[#f87171]" />
+                {hasAlarm && (
+                  <span className="absolute left-[24px] top-[4px] h-[8px] w-[8px] rounded-full bg-[#f87171]" />
+                )}
               </button>
             </div>
           </div>
