@@ -13,6 +13,8 @@ import ChatListPage from "../pages/chat/ChatListPage";
 import ChatDetailPage from "../pages/chat/ChatDetailPage";
 import AlarmPage from "../pages/alarm/AlarmPage";
 import CalendarPage from "../pages/calendar/CalendarPage";
+import MyPage from "../pages/mypage/MyPage";
+import AccountSettingsPage from "../pages/mypage/AccountSettingsPage";
 
 export default function AppRouter() {
   return (
@@ -32,6 +34,8 @@ export default function AppRouter() {
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/alarm" element={<AlarmPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/my" element={<MyPage />} />
+        <Route path="/my/settings" element={<AccountSettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
