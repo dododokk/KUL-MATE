@@ -9,6 +9,8 @@ import SignUpPage from "../pages/signUp/SignUpPage";
 import SplashPage from "../pages/splash/SplashPage";
 import SurveyPage from "../pages/survey/SurveyPage";
 import AdminPage from "../pages/admin/AdminPage";
+import ChatListPage from "../pages/chat/ChatListPage";
+import ChatDetailPage from "../pages/chat/ChatDetailPage";
 
 export default function AppRouter() {
   return (
@@ -16,6 +18,8 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<SplashPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/chat" element={<ChatListPage />} />
+        <Route path="/chat/:id" element={<ChatDetailPage />} />
         <Route path="/post/detail" element={<PostDetailPage />} />
         <Route path="/post/create" element={<PostCreatePage />} />
         <Route path="/report" element={<ReportPage />} />

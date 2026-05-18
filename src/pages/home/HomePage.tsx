@@ -15,7 +15,7 @@ import {
   recPill1,
   recPill2,
 } from "../../assets/figma/home";
-import AppBottomNav from "../../features/layout/AppBottomNav";
+import AppBottomNav from "../../components/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
 import SearchFilterSheet from "../../features/home/SearchFilterSheet";
 
@@ -35,19 +35,37 @@ type RoommatePost = {
 };
 
 function IconImg({ src, alt }: { src: string; alt: string }) {
-  return <img src={src} alt={alt} className="block h-full w-full" draggable={false} />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="block h-full w-full"
+      draggable={false}
+    />
+  );
 }
 
 function TagPill({ label, bg }: { label: string; bg: string }) {
   return (
     <span className="relative flex h-[26px] items-center rounded-full border border-[rgba(122,158,130,0.1)] px-[11px] py-[5px] text-[12px] font-medium text-[#7a9e82]">
-      <img alt="" src={bg} className="pointer-events-none absolute inset-0 h-full w-full rounded-full object-cover" draggable={false} />
+      <img
+        alt=""
+        src={bg}
+        className="pointer-events-none absolute inset-0 h-full w-full rounded-full object-cover"
+        draggable={false}
+      />
       <span className="relative leading-[16px]">{label}</span>
     </span>
   );
 }
 
-function ScoreBadge({ score, tone }: { score: string; tone: RoommatePost["scoreTone"] }) {
+function ScoreBadge({
+  score,
+  tone,
+}: {
+  score: string;
+  tone: RoommatePost["scoreTone"];
+}) {
   if (tone === "primary") {
     return (
       <span className="flex h-[30px] items-center rounded-[12px] border border-[rgba(122,158,130,0.2)] bg-gradient-to-t from-[#f3f7f4] to-[#ecfdf5] px-[11px] py-[7px] text-[12px] font-black leading-[16px] text-[#7a9e82]">
@@ -65,13 +83,13 @@ function ScoreBadge({ score, tone }: { score: string; tone: RoommatePost["scoreT
 
 function RoommateCard({ post }: { post: RoommatePost }) {
   const [isBookmarked, setIsBookmarked] = useState(
-    post.bookmarkIcon === recIconBookmarkActive
+    post.bookmarkIcon === recIconBookmarkActive,
   );
 
   const handleBookmarkToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setIsBookmarked((prev) => !prev);
   };
 
@@ -92,8 +110,12 @@ function RoommateCard({ post }: { post: RoommatePost }) {
               </div>
             </div>
             <div className="flex flex-col items-start">
-              <div className="text-[14px] font-bold leading-[20px] text-[#111827]">{post.nickname}</div>
-              <div className="whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">{post.majorYear}</div>
+              <div className="text-[14px] font-bold leading-[20px] text-[#111827]">
+                {post.nickname}
+              </div>
+              <div className="whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">
+                {post.majorYear}
+              </div>
             </div>
           </div>
 
@@ -101,17 +123,19 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             {post.score && post.scoreTone ? (
               <ScoreBadge score={post.score} tone={post.scoreTone} />
             ) : null}
-            
-            <button 
-              type="button" 
-              className="flex h-[32px] w-[32px] items-center justify-center" 
+
+            <button
+              type="button"
+              className="flex h-[32px] w-[32px] items-center justify-center"
               aria-label="북마크"
               onClick={handleBookmarkToggle}
             >
               <div className="h-[18px] w-[18.75px]">
-                <IconImg 
-                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted} 
-                  alt="북마크" 
+                <IconImg
+                  src={
+                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
+                  }
+                  alt="북마크"
                 />
               </div>
             </button>
@@ -122,11 +146,15 @@ function RoommateCard({ post }: { post: RoommatePost }) {
           <div className="h-[14px] w-[14.578px]">
             <IconImg src={recIconLocation} alt="" />
           </div>
-          <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.dormLabel}</div>
+          <div className="text-[12px] leading-[16px] text-[#6b7280]">
+            {post.dormLabel}
+          </div>
         </div>
 
         <div className="pb-[8px]">
-          <h3 className="overflow-hidden text-[14px] font-semibold leading-[19.25px] text-[#111827]">{post.title}</h3>
+          <h3 className="overflow-hidden text-[14px] font-semibold leading-[19.25px] text-[#111827]">
+            {post.title}
+          </h3>
         </div>
 
         <div className="flex items-center gap-[12px] pb-[12px]">
@@ -134,13 +162,17 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             <div className="h-[12px] w-[12.5px]">
               <IconImg src={recIconClock} alt="" />
             </div>
-            <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.sleepTime}</div>
+            <div className="text-[12px] leading-[16px] text-[#6b7280]">
+              {post.sleepTime}
+            </div>
           </div>
           <div className="flex items-center gap-[4px]">
             <div className="h-[12px] w-[12.5px]">
               <IconImg src={recIconSunrise} alt="" />
             </div>
-            <div className="text-[12px] leading-[16px] text-[#6b7280]">{post.wakeTime}</div>
+            <div className="text-[12px] leading-[16px] text-[#6b7280]">
+              {post.wakeTime}
+            </div>
           </div>
           <div className="flex items-center gap-[4px]">
             <span className="h-px w-px" aria-hidden />
@@ -153,7 +185,9 @@ function RoommateCard({ post }: { post: RoommatePost }) {
           ))}
         </div>
 
-        <div className="pt-[12px] text-right text-[12px] leading-[16px] text-[#d1d5db]">{post.date}</div>
+        <div className="pt-[12px] text-right text-[12px] leading-[16px] text-[#d1d5db]">
+          {post.date}
+        </div>
       </div>
     </article>
   );
@@ -162,7 +196,9 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "recommended">("recommended");
+  const [activeTab, setActiveTab] = useState<"all" | "recommended">(
+    "recommended",
+  );
 
   // 수정됨: 첫 번째 데이터만 남기고 모두 제거
   const allPosts: RoommatePost[] = [
@@ -181,18 +217,16 @@ export default function HomePage() {
         { label: "아침샤워", bg: recPill1 },
       ],
       date: "2026-03-20",
-    }
+    },
   ];
 
   const recommendedPosts = useMemo(
     () =>
-      allPosts
-        .slice(0, 2)
-        .map((post, idx) => ({
-          ...post,
-          score: idx === 0 ? "92점" : "78점",
-          scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
-        })),
+      allPosts.slice(0, 2).map((post, idx) => ({
+        ...post,
+        score: idx === 0 ? "92점" : "78점",
+        scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
+      })),
     [allPosts],
   );
 
@@ -220,11 +254,19 @@ export default function HomePage() {
                       "linear-gradient(135deg, rgb(122, 158, 130) 0%, rgb(5, 150, 105) 100%)",
                   }}
                 >
-                  <span className="text-[12px] font-black leading-[16px] text-white">KM</span>
+                  <span className="text-[12px] font-black leading-[16px] text-white">
+                    KM
+                  </span>
                 </div>
-                <div className="text-[18px] font-black leading-[28px] tracking-[-0.45px] text-[#7a9e82]">KUL:MATE</div>
+                <div className="text-[18px] font-black leading-[28px] tracking-[-0.45px] text-[#7a9e82]">
+                  KUL:MATE
+                </div>
               </div>
-              <button type="button" className="relative flex h-[36px] w-[36px] items-center justify-center" aria-label="알림">
+              <button
+                type="button"
+                className="relative flex h-[36px] w-[36px] items-center justify-center"
+                aria-label="알림"
+              >
                 <div className="h-[20px] w-[20.828px]">
                   <IconImg src={recIconBell} alt="" />
                 </div>
@@ -236,7 +278,9 @@ export default function HomePage() {
           <div className="flex w-full items-start pb-[16px]">
             <div className="relative h-[42px] w-full">
               <div className="flex h-[42px] w-full items-center rounded-[12px] border border-[rgba(122,158,130,0.15)] bg-[rgba(243,247,244,0.4)] py-[11px] pl-[41px] pr-[17px] text-[14px] leading-[20px]">
-                <span className="text-[#9ca3af]">닉네임, 학과, 키워드로 검색...</span>
+                <span className="text-[#9ca3af]">
+                  닉네임, 학과, 키워드로 검색...
+                </span>
               </div>
               <div className="absolute left-[12px] top-[11px] h-[20px] w-[20px]">
                 <IconImg src={recIconSearch} alt="" />
@@ -253,7 +297,11 @@ export default function HomePage() {
               <div className="h-[14px] w-[14.578px]">
                 <IconImg src={recIconList} alt="" />
               </div>
-              <span className={`text-[12px] font-bold leading-[16px] ${activeTab === "all" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}>전체 구인글</span>
+              <span
+                className={`text-[12px] font-bold leading-[16px] ${activeTab === "all" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}
+              >
+                전체 구인글
+              </span>
             </button>
 
             <button
@@ -264,7 +312,11 @@ export default function HomePage() {
               <div className="h-[14px] w-[14.578px]">
                 <IconImg src={recIconSparkle} alt="" />
               </div>
-              <span className={`text-[12px] font-bold leading-[16px] ${activeTab === "recommended" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}>추천 룸메이트</span>
+              <span
+                className={`text-[12px] font-bold leading-[16px] ${activeTab === "recommended" ? "text-[#7a9e82]" : "text-[#9ca3af]"}`}
+              >
+                추천 룸메이트
+              </span>
             </button>
 
             <button
@@ -273,7 +325,9 @@ export default function HomePage() {
               className="absolute right-[12px] flex h-[16px] w-[16px] items-center justify-center rounded-full bg-[rgba(122,158,130,0.1)]"
               aria-label="도움말"
             >
-              <span className="text-[10px] leading-[15px] text-[#7a9e82]">?</span>
+              <span className="text-[10px] leading-[15px] text-[#7a9e82]">
+                ?
+              </span>
             </button>
           </div>
         </header>
@@ -282,13 +336,17 @@ export default function HomePage() {
           <div className="flex items-center text-[12px] leading-[16px]">
             {activeTab === "recommended" ? (
               <>
-                <span className="font-bold text-[#7a9e82]">{posts.length}명</span>
+                <span className="font-bold text-[#7a9e82]">
+                  {posts.length}명
+                </span>
                 <span className="text-[#9ca3af]">의 추천 룸메이트</span>
                 <span className="text-[#d1d5db]">&nbsp;· 80점 이상</span>
               </>
             ) : (
               <>
-                <span className="font-bold text-[#374151]">{posts.length}명</span>
+                <span className="font-bold text-[#374151]">
+                  {posts.length}명
+                </span>
                 <span className="text-[#9ca3af]">의 룸메이트</span>
               </>
             )}
@@ -301,7 +359,9 @@ export default function HomePage() {
             <div className="h-[14px] w-[14.578px]">
               <IconImg src={recIconFilter} alt="" />
             </div>
-            <span className="whitespace-nowrap text-[12px] font-semibold leading-[16px] text-[#6b7280]">필터</span>
+            <span className="whitespace-nowrap text-[12px] font-semibold leading-[16px] text-[#6b7280]">
+              필터
+            </span>
           </button>
         </section>
 
