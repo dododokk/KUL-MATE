@@ -1,4 +1,6 @@
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { updateOnboarding } from "../../api/auth/authApi";
+import { submitMyStyleSurvey } from "../../api/survey/surveyApi";
 import SurveyForm, { type SurveyData } from "../../features/survey/SurveyForm";
 
 // TODO: 추후 API 연동 시 실제 서버 데이터로 교체
@@ -30,8 +32,10 @@ export default function SurveyPage() {
     return <Navigate to="/home" replace />;
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async (data: SurveyData) => {
+    await submitMyStyleSurvey(data);
     if (!isEditMode) {
+      await updateOnboarding();
       localStorage.setItem("kul_isOnboardingCompleted", "true");
       navigate("/home", { replace: true });
     } else {

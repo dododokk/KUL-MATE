@@ -40,6 +40,12 @@ export interface RegisterResponse {
   };
 }
 
+export interface ReissueRequest {
+  refreshToken: string;
+}
+
+export type ReissueResponse = LoginResponse;
+
 export interface LoginRequest {
   username: string;
   password: string;
