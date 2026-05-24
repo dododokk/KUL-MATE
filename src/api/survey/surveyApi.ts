@@ -90,6 +90,53 @@ export async function submitPreferenceSurvey(data: PreferenceSurveyData): Promis
   await axiosInstance.post("/api/surveys/preferred-roommate", toPreferenceRequest(data));
 }
 
+// 선호 룸메이트 설문 수정 (PATCH /api/surveys/preferred-roommate)
+export async function updatePreferenceSurvey(data: PreferenceSurveyData): Promise<void> {
+  await axiosInstance.patch("/api/surveys/preferred-roommate", toPreferenceRequest(data));
+}
+
+// 선호 룸메이트 설문 내용 조회 후 폼 형식으로 변환 (GET /api/surveys/preferred-roommate)
+export async function loadPreferenceSurvey(): Promise<Partial<PreferenceSurveyData>> {
+  const { data } = await axiosInstance.get<PreferenceSurveyResponse>(
+    "/api/surveys/preferred-roommate",
+  );
+  const hhmm = (t: string) => t?.slice(0, 5) ?? "00:00";
+  const SLEEP_HABIT_REVERSE: Record<string, PreferenceSurveyData["sleepingHabits"][number]> = {
+    NONE: "none",
+    NORMAL: "moderate",
+    SEVERE: "severe",
+  };
+  const HOME_VISIT_REVERSE: Record<string, NonNullable<PreferenceSurveyData["homeVisit"]>> = {
+    WEEKLY: "weekly",
+    BIWEEKLY: "biweekly",
+    MONTHLY_OR_MORE: "monthly",
+    RARE: "rarely",
+  };
+  return {
+    smoking: data.smokingStatus === "SMOKER" ? "smoker" : "nonSmoker",
+    eating: data.eatingInRoom === "ALLOWED" ? "allowed" : "notAllowed",
+    mbti: {
+      ei: (data.mbtiFirst as "E" | "I") || null,
+      sn: (data.mbtiSecond as "S" | "N") || null,
+      tf: (data.mbtiThird as "T" | "F") || null,
+      jp: (data.mbtiFourth as "J" | "P") || null,
+    },
+    showerTime: data.showerTime === "MORNING" ? "morning" : data.showerTime === "EVENING" ? "evening" : null,
+    sleepingHabits: data.sleepHabits
+      .map((h) => SLEEP_HABIT_REVERSE[h])
+      .filter((h): h is PreferenceSurveyData["sleepingHabits"][number] => !!h),
+    homeVisit: data.homeVisitFrequencies.length > 0
+      ? (HOME_VISIT_REVERSE[data.homeVisitFrequencies[0]] ?? null)
+      : null,
+    bedtime: { start: hhmm(data.sleepStartTime), end: hhmm(data.sleepEndTime) },
+    wakeTime: { start: hhmm(data.wakeUpStartTime), end: hhmm(data.wakeUpEndTime) },
+    returnTime: { start: hhmm(data.returnStartTime), end: hhmm(data.returnEndTime) },
+    cleaningFreqs: data.cleaningFrequencyScores,
+    tidySensitivities: data.organizationSensitivityScores,
+    tempSensitivities: data.temperatureSensitivityScores,
+  };
+}
+
 // 선호 룸메이트 설문 완료 여부 조회 (GET /api/surveys/preferred-roommate/status)
 export async function getPreferenceSurveyStatus(): Promise<PreferenceSurveyStatusResponse> {
   const { data } = await axiosInstance.get<PreferenceSurveyStatusResponse>(
