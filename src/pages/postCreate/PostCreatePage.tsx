@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; // useNavigate 추가
+import { useNavigate } from "react-router-dom"; // useNavigate 추가
 
 export default function PostCreatePage() {
   const navigate = useNavigate(); // 페이지 이동을 위한 함수
