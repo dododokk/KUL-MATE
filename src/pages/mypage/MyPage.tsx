@@ -223,6 +223,9 @@ export default function MyPage() {
             onCancelRoommate={() => setShowCancelModal(true)}
             onChatRoommate={() => navigate("/chat")}
             onCalendarRoommate={() => navigate("/calendar")}
+            onSurveyClick={(id) => {
+              if (id === "lifestyle") navigate("/survey?mode=edit");
+            }}
           />
         )}
         {activeTab === "posts" && (
