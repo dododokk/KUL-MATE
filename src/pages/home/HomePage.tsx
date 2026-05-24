@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getPosts } from "../../api/posts/postsApi";
+import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
 import {
   recIconBell,
@@ -202,8 +203,13 @@ export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hasAlarm = true; // 읽지 않은 알림이 있으면 true
-  // TODO: 추후 API 연동 시 실제 서버 값으로 교체
-  const isPreferenceSurveyCompleted = false;
+  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
+
+  useEffect(() => {
+    getPreferenceSurveyStatus()
+      .then((res) => setIsPreferenceSurveyCompleted(res.completed))
+      .catch(() => setIsPreferenceSurveyCompleted(false));
+  }, []);
   const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
   const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
 

@@ -6,6 +6,7 @@ import MyPostList from "../../features/mypage/MyPostList";
 import RoommateCancelModal from "../../features/mypage/RoommateCancelModal";
 import SavedPostList from "../../features/mypage/SavedPostList";
 import type { MyPageTab, MyPost, RoommateInfo, SavedPost, UserProfile } from "../../features/mypage/types";
+import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import profileIcon from "../../assets/mypage/profile.svg";
 import settingIcon from "../../assets/mypage/setting.svg";
 import noticeIcon from "../../assets/mypage/notice.svg";
@@ -61,10 +62,6 @@ const MOCK_SAVED: SavedPost[] = [
   },
 ];
 
-const SURVEY_ITEMS = [
-  { id: "lifestyle", label: "나의 생활 스타일 설문", completed: true },
-  { id: "preference", label: "선호 룸메이트 성향", completed: false },
-];
 
 const STATUS_BANNER: Record<
   UserProfile["dormStatus"],
@@ -99,7 +96,19 @@ const STATUS_BANNER: Record<
 export default function MyPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MyPageTab>("info");
+  const [preferenceCompleted, setPreferenceCompleted] = useState(false);
   const [roommate, setRoommate] = useState<RoommateInfo | null>(MOCK_ROOMMATE);
+
+  useEffect(() => {
+    getPreferenceSurveyStatus()
+      .then((res) => setPreferenceCompleted(res.completed))
+      .catch(() => setPreferenceCompleted(false));
+  }, []);
+
+  const surveyItems = [
+    { id: "lifestyle", label: "나의 생활 스타일 설문", completed: true },
+    { id: "preference", label: "선호 룸메이트 성향", completed: preferenceCompleted },
+  ];
   const [posts, setPosts] = useState<MyPost[]>(MOCK_POSTS);
   const [saved, setSaved] = useState<SavedPost[]>(MOCK_SAVED);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -219,14 +228,14 @@ export default function MyPage() {
         {activeTab === "info" && (
           <InfoTab
             roommate={roommate}
-            surveyItems={SURVEY_ITEMS}
+            surveyItems={surveyItems}
             onCancelRoommate={() => setShowCancelModal(true)}
             onChatRoommate={() => navigate("/chat")}
             onCalendarRoommate={() => navigate("/calendar")}
             onSurveyClick={(id) => {
               if (id === "lifestyle") navigate("/survey?mode=edit");
               if (id === "preference") {
-                const item = SURVEY_ITEMS.find((s) => s.id === id);
+                const item = surveyItems.find((s) => s.id === id);
                 navigate(item?.completed ? "/survey/preference?mode=edit" : "/survey/preference");
               }
             }}

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PreferenceSurveyForm, { type PreferenceSurveyData } from "../../features/survey/PreferenceSurveyForm";
+import { submitPreferenceSurvey } from "../../api/survey/surveyApi";
 
-// TODO: 추후 API 연동 시 실제 서버 데이터로 교체
+// TODO: 수정 모드 시 기존 데이터 로드 (getPreferenceSurvey API 연동 필요)
 const MOCK_EXISTING_PREFERENCE: Partial<PreferenceSurveyData> = {
   mbti: { ei: "I", sn: null, tf: "T", jp: null },
   smoking: "nonSmoker",
@@ -22,10 +24,17 @@ export default function PreferenceSurveyPage() {
   const [searchParams] = useSearchParams();
   const isEditMode = searchParams.get("mode") === "edit";
   const showBanner = searchParams.get("source") === "recommend";
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    // TODO: 추후 API 연동 시 isPreferenceSurveyCompleted 상태 업데이트
-    navigate(isEditMode ? "/my" : "/home", { replace: true });
+  const handleSubmit = async (data: PreferenceSurveyData) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await submitPreferenceSurvey(data);
+      navigate(isEditMode ? "/my" : "/home", { replace: true });
+    } catch {
+      setIsSubmitting(false);
+    }
   };
 
   return (
