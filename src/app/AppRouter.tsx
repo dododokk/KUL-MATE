@@ -8,6 +8,7 @@ import ReportPage from "../pages/report/ReportPage";
 import SignUpPage from "../pages/signUp/SignUpPage";
 import SplashPage from "../pages/splash/SplashPage";
 import SurveyPage from "../pages/survey/SurveyPage";
+import PreferenceSurveyPage from "../pages/survey/PreferenceSurveyPage";
 import AdminPage from "../pages/admin/AdminPage";
 import ChatListPage from "../pages/chat/ChatListPage";
 import ChatDetailPage from "../pages/chat/ChatDetailPage";
@@ -31,6 +32,7 @@ export default function AppRouter() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/survey" element={<SurveyPage />} />
+        <Route path="/survey/preference" element={<PreferenceSurveyPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/alarm" element={<AlarmPage />} />
         <Route path="/calendar" element={<CalendarPage />} />

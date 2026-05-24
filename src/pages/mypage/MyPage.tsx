@@ -223,6 +223,13 @@ export default function MyPage() {
             onCancelRoommate={() => setShowCancelModal(true)}
             onChatRoommate={() => navigate("/chat")}
             onCalendarRoommate={() => navigate("/calendar")}
+            onSurveyClick={(id) => {
+              if (id === "lifestyle") navigate("/survey?mode=edit");
+              if (id === "preference") {
+                const item = SURVEY_ITEMS.find((s) => s.id === id);
+                navigate(item?.completed ? "/survey/preference?mode=edit" : "/survey/preference");
+              }
+            }}
           />
         )}
         {activeTab === "posts" && (

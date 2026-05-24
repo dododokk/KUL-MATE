@@ -198,6 +198,8 @@ export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hasAlarm = true; // 읽지 않은 알림이 있으면 true
+  // TODO: 추후 API 연동 시 실제 서버 값으로 교체
+  const isPreferenceSurveyCompleted = false;
   const [activeTab, setActiveTab] = useState<"all" | "recommended">(
     "recommended",
   );
@@ -371,11 +373,60 @@ export default function HomePage() {
         </section>
 
         <main className="flex w-full flex-col items-start gap-[12px] px-[20px] pb-[12px]">
-          {posts.map((p) => (
-            <Link key={p.id} to="/post/detail" className="w-full">
-              <RoommateCard post={p} />
-            </Link>
-          ))}
+          {activeTab === "recommended" && !isPreferenceSurveyCompleted ? (
+            <div className="flex w-full flex-col items-center gap-[24px] py-[48px]">
+              <div
+                className="flex size-[80px] items-center justify-center rounded-[24px] border border-[rgba(122,158,130,0.15)]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, rgba(122,158,130,0.15) 0%, rgba(209,250,229,0.3) 100%)",
+                }}
+              >
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <path
+                    d="M18 3L22.77 12.68L33.46 14.22L25.73 21.76L27.56 32.41L18 27.34L8.44 32.41L10.27 21.76L2.54 14.22L13.23 12.68L18 3Z"
+                    stroke="#7a9e82"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <div className="flex flex-col items-center gap-[8px] text-center">
+                <span className="text-[16px] font-bold text-[#111827]">
+                  설문을 먼저 완료해주세요
+                </span>
+                <span className="text-[13px] leading-[20px] text-[#9ca3af]">
+                  선호 룸메이트 성향 설문을 완료하면
+                  <br />
+                  맞춤 추천 룸메이트를 확인할 수 있어요
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/survey/preference?source=recommend")}
+                className="flex h-[44px] items-center gap-[6px] rounded-[14px] px-[24px] text-sm font-bold text-white"
+                style={{ backgroundColor: "#7A9E82" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3.33337 8H12.6667M12.6667 8L8.66671 4M12.6667 8L8.66671 12"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                바로가기
+              </button>
+            </div>
+          ) : (
+            posts.map((p) => (
+              <Link key={p.id} to="/post/detail" className="w-full">
+                <RoommateCard post={p} />
+              </Link>
+            ))
+          )}
         </main>
 
         <AppBottomNav />
