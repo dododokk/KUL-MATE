@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../../api/auth/authApi";
 import idIcon from "../../assets/login/id.svg";
 import passwordIcon from "../../assets/login/password.svg";
 import eyeIcon from "../../assets/login/eye.svg";
@@ -11,6 +12,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   return (
     <div className="flex w-full flex-col px-6 pb-10 pt-8">
@@ -66,14 +68,23 @@ export default function LoginForm() {
         </div>
 
         {/* Login button */}
+        {errorMsg && (
+          <p className="text-xs text-[#f87171] text-center">{errorMsg}</p>
+        )}
         <button
           type="button"
-          onClick={() => {
-            // TODO: replace mock with actual API call
-            // API response shape: { data: { isOnboardingCompleted: boolean, ...tokens } }
-            const isOnboardingCompleted = false;
-            localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
-            navigate(isOnboardingCompleted ? "/home" : "/onboarding");
+          onClick={async () => {
+            setErrorMsg("");
+            try {
+              const res = await login({ username: id, password });
+              const { accessToken, refreshToken, isOnboardingCompleted } = res.data;
+              localStorage.setItem("kul_accessToken", accessToken);
+              localStorage.setItem("kul_refreshToken", refreshToken);
+              localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
+              navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
+            } catch {
+              setErrorMsg("아이디 또는 비밀번호가 올바르지 않아요.");
+            }
           }}
           className="mt-2 h-12 w-full rounded-xl text-sm font-bold text-white"
           style={{

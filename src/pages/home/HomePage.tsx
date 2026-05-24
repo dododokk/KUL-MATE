@@ -1,5 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getPosts } from "../../api/posts/postsApi";
+import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
+import type { PostSummary } from "../../api/posts/type";
 import {
   recIconBell,
   recIconBookmarkActive,
@@ -14,6 +17,8 @@ import {
   recIconUser,
   recPill1,
   recPill2,
+  recPill3,
+  recPill4,
 } from "../../assets/figma/home";
 import AppBottomNav from "../../components/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
@@ -198,31 +203,44 @@ export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hasAlarm = true; // 읽지 않은 알림이 있으면 true
-  // TODO: 추후 API 연동 시 실제 서버 값으로 교체
-  const isPreferenceSurveyCompleted = false;
-  const [activeTab, setActiveTab] = useState<"all" | "recommended">(
-    "recommended",
-  );
+  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
 
-  // 수정됨: 첫 번째 데이터만 남기고 모두 제거
-  const allPosts: RoommatePost[] = [
-    {
-      id: "1",
-      nickname: "코딩고수민준",
-      majorYear: "컴퓨터공학부 24학번 05년생", // 학부로 텍스트 수정됨
-      dormLabel: "레이크홀\u200b",
-      title: "조용하고 깔끔한 룸메이트 구해요!",
-      sleepTime: "23:00 - 24:00",
-      wakeTime: "07:00 - 08:00",
-      bookmarkIcon: recIconBookmarkActive,
-      tags: [
-        { label: "비흡연", bg: recPill1 },
-        { label: "ENFP", bg: recPill2 },
-        { label: "아침샤워", bg: recPill1 },
-      ],
-      date: "2026-03-20",
-    },
-  ];
+  useEffect(() => {
+    getPreferenceSurveyStatus()
+      .then((res) => setIsPreferenceSurveyCompleted(res.completed))
+      .catch(() => setIsPreferenceSurveyCompleted(false));
+  }, []);
+  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
+  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
+
+  useEffect(() => {
+    if (activeTab !== "all") return;
+    getPosts().then(setApiPosts).catch(() => setApiPosts([]));
+  }, [activeTab]);
+
+  const pillBgs = [recPill1, recPill2, recPill3, recPill4];
+
+  const dormLabel = (type: string) => {
+    if (type === "LAKE") return "레이크홀";
+    return type;
+  };
+
+  const allPosts: RoommatePost[] = useMemo(
+    () =>
+      apiPosts.map((p) => ({
+        id: String(p.postId),
+        nickname: p.authorNickname,
+        majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
+        dormLabel: dormLabel(p.dormitoryType),
+        title: p.title,
+        sleepTime: `${p.sleepStartTime} - ${p.sleepEndTime}`,
+        wakeTime: `${p.wakeUpStartTime} - ${p.wakeUpEndTime}`,
+        bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
+        tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
+        date: p.createdAt.slice(0, 10),
+      })),
+    [apiPosts],
+  );
 
   const recommendedPosts = useMemo(
     () =>
@@ -233,7 +251,6 @@ export default function HomePage() {
       })),
     [allPosts],
   );
-
   const posts = activeTab === "recommended" ? recommendedPosts : allPosts;
 
   return (
@@ -422,7 +439,7 @@ export default function HomePage() {
             </div>
           ) : (
             posts.map((p) => (
-              <Link key={p.id} to="/post/detail" className="w-full">
+              <Link key={p.id} to={`/post/detail?id=${p.id}`} className="w-full">
                 <RoommateCard post={p} />
               </Link>
             ))

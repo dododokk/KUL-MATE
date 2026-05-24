@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { sendEmailCode, verifyEmailCode } from "../../api/auth/authApi";
 
-type Props = { onNext: () => void };
+type Props = { onNext: (email: string) => void };
 type EmailStep = "input" | "codeSent" | "verified";
 
 function CheckIcon() {
@@ -22,24 +23,45 @@ export default function SignUpStep2Email({ onNext }: Props) {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!email.endsWith("@konkuk.ac.kr")) {
       setEmailError("건국대학교 이메일(@konkuk.ac.kr)만 사용 가능합니다.");
       return;
     }
     setEmailError("");
-    setEmailStep("codeSent");
+    setIsSending(true);
+    try {
+      await sendEmailCode({ email });
+      setCode("");
+      setCodeError("");
+      setEmailStep("codeSent");
+    } catch {
+      setEmailError("인증번호 발송에 실패했어요. 다시 시도해 주세요.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const handleResend = () => {
-    setCode("");
-    setEmailStep("codeSent");
-  };
+  const handleResend = () => handleSend();
 
-  const handleVerify = () => {
-    if (code === "123456") {
-      setEmailStep("verified");
+  const handleVerify = async () => {
+    setCodeError("");
+    setIsVerifying(true);
+    try {
+      const res = await verifyEmailCode({ email, code });
+      if (res.success) {
+        setEmailStep("verified");
+      } else {
+        setCodeError(res.message || "인증번호가 올바르지 않아요.");
+      }
+    } catch {
+      setCodeError("인증번호가 올바르지 않아요.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -79,13 +101,13 @@ export default function SignUpStep2Email({ onNext }: Props) {
             <button
               type="button"
               onClick={emailStep === "codeSent" ? handleResend : handleSend}
-              disabled={verified}
+              disabled={verified || isSending}
               className={`h-[46px] rounded-xl px-4 text-sm font-bold text-white transition-opacity ${
-                verified ? "opacity-50" : "opacity-100"
+                verified || isSending ? "opacity-50" : "opacity-100"
               }`}
               style={{ background: "#7a9e82" }}
             >
-              {emailStep === "codeSent" ? "재발송" : "발송"}
+              {isSending ? "발송 중..." : emailStep === "codeSent" ? "재발송" : "발송"}
             </button>
           </div>
           {emailError && (
@@ -111,12 +133,13 @@ export default function SignUpStep2Email({ onNext }: Props) {
               <button
                 type="button"
                 onClick={handleVerify}
-                className="h-[46px] rounded-xl bg-[#f3f7f4] px-4 text-sm font-bold text-[#7a9e82]"
+                disabled={isVerifying}
+                className={`h-[46px] rounded-xl bg-[#f3f7f4] px-4 text-sm font-bold text-[#7a9e82] transition-opacity ${isVerifying ? "opacity-50" : "opacity-100"}`}
               >
-                확인
+                {isVerifying ? "확인 중..." : "확인"}
               </button>
             </div>
-            <p className="text-xs text-[#9ca3af]">테스트: 123456</p>
+            {codeError && <p className="text-xs text-[#ef4444]">{codeError}</p>}
           </div>
         )}
 
@@ -143,7 +166,7 @@ export default function SignUpStep2Email({ onNext }: Props) {
       <div className="shrink-0 border-t border-[#f3f4f6] bg-white/90 px-6 pb-8 pt-[17px] backdrop-blur-sm">
         <button
           type="button"
-          onClick={onNext}
+          onClick={() => onNext(email)}
           disabled={!verified}
           className={`h-[52px] w-full rounded-xl text-sm font-bold text-white transition-opacity ${
             verified ? "opacity-100" : "opacity-50"

@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import uploadIcon from "../../assets/signUp/upload.svg";
+import { register } from "../../api/auth/authApi";
 
 function formatPhone(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -8,11 +9,12 @@ function formatPhone(value: string) {
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
 }
 
-type Props = { onComplete: () => void };
+type Props = { email: string; onComplete: () => void };
 
 type Gender = "male" | "female" | null;
 
 type Errors = {
+  gender?: string;
   userId?: string;
   nickname?: string;
   studentId?: string;
@@ -22,6 +24,7 @@ type Errors = {
 };
 
 function validate(fields: {
+  gender: Gender;
   userId: string;
   nickname: string;
   studentId: string;
@@ -30,6 +33,9 @@ function validate(fields: {
   passwordConfirm: string;
 }): Errors {
   const errors: Errors = {};
+  if (!fields.gender) {
+    errors.gender = "성별을 선택해주세요.";
+  }
   if (!/[a-zA-Z]/.test(fields.userId) || fields.userId.length < 6) {
     errors.userId = "아이디에 영문이 포함되어야 합니다.";
   }
@@ -51,7 +57,7 @@ function validate(fields: {
   return errors;
 }
 
-export default function SignUpStep3Account({ onComplete }: Props) {
+export default function SignUpStep3Account({ email, onComplete }: Props) {
   const [gender, setGender] = useState<Gender>(null);
   const [userId, setUserId] = useState("");
   const [nickname, setNickname] = useState("");
@@ -62,37 +68,45 @@ export default function SignUpStep3Account({ onComplete }: Props) {
   const [dormFile, setDormFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [apiError, setApiError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = () => {
-    const newErrors = validate({
-      userId,
-      nickname,
-      studentId,
-      phone,
-      password,
-      passwordConfirm,
-    });
+  const handleSubmit = async () => {
+    const newErrors = validate({ gender, userId, nickname, studentId, phone, password, passwordConfirm });
     setErrors(newErrors);
     setSubmitted(true);
-    if (Object.keys(newErrors).length === 0) {
+    if (Object.keys(newErrors).length > 0) return;
+
+    setApiError("");
+    setIsLoading(true);
+    try {
+      await register(
+        {
+          gender: gender === "male" ? "MALE" : "FEMALE",
+          username: userId,
+          nickname,
+          studentNumber: studentId,
+          phoneNumber: phone.replace(/-/g, ""),
+          password,
+          passwordConfirm,
+          email,
+        },
+        dormFile ?? undefined,
+      );
       onComplete();
+    } catch {
+      setApiError("회원가입에 실패했어요. 입력 정보를 확인해 주세요.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRevalidate = (field: keyof Errors) => {
+  useEffect(() => {
     if (!submitted) return;
-    const newErrors = validate({
-      userId,
-      nickname,
-      studentId,
-      phone,
-      password,
-      passwordConfirm,
-    });
-    setErrors((prev) => ({ ...prev, [field]: newErrors[field] }));
-  };
+    setErrors(validate({ gender, userId, nickname, studentId, phone, password, passwordConfirm }));
+  }, [submitted, gender, userId, nickname, studentId, phone, password, passwordConfirm]);
 
   return (
     <div className="relative flex flex-1 flex-col overflow-hidden">
@@ -127,6 +141,9 @@ export default function SignUpStep3Account({ onComplete }: Props) {
               </button>
             ))}
           </div>
+          {errors.gender && (
+            <p className="text-xs text-[#ef4444]">{errors.gender}</p>
+          )}
         </div>
 
         {/* 아이디 */}
@@ -137,10 +154,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="text"
             value={userId}
-            onChange={(e) => {
-              setUserId(e.target.value);
-              handleRevalidate("userId");
-            }}
+            onChange={(e) => setUserId(e.target.value)}
             placeholder="영문 포함 6자 이상"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.userId
@@ -164,10 +178,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="text"
             value={nickname}
-            onChange={(e) => {
-              setNickname(e.target.value.slice(0, 10));
-              handleRevalidate("nickname");
-            }}
+            onChange={(e) => setNickname(e.target.value.slice(0, 10))}
             placeholder="예: 초록고양이, 꿀잠요정"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.nickname
@@ -189,10 +200,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="text"
             value={studentId}
-            onChange={(e) => {
-              setStudentId(e.target.value);
-              handleRevalidate("studentId");
-            }}
+            onChange={(e) => setStudentId(e.target.value)}
             placeholder="202300000"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.studentId
@@ -213,10 +221,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => {
-              setPhone(formatPhone(e.target.value));
-              handleRevalidate("phone");
-            }}
+            onChange={(e) => setPhone(formatPhone(e.target.value))}
             placeholder="010-0000-0000"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.phone
@@ -237,10 +242,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="password"
             value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              handleRevalidate("password");
-            }}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="영문+특수문자 포함 8자 이상"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.password
@@ -261,10 +263,7 @@ export default function SignUpStep3Account({ onComplete }: Props) {
           <input
             type="password"
             value={passwordConfirm}
-            onChange={(e) => {
-              setPasswordConfirm(e.target.value);
-              handleRevalidate("passwordConfirm");
-            }}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
             placeholder="비밀번호를 다시 입력하세요"
             className={`h-[46px] w-full rounded-xl border bg-white/80 px-[17px] text-sm text-black placeholder:text-[#9ca3af] focus:outline-none ${
               errors.passwordConfirm
@@ -314,16 +313,20 @@ export default function SignUpStep3Account({ onComplete }: Props) {
 
       {/* Bottom bar */}
       <div className="shrink-0 border-t border-[#f3f4f6] bg-white/90 px-6 pb-8 pt-[17px] backdrop-blur-sm">
+        {apiError && (
+          <p className="mb-2 text-center text-xs text-[#ef4444]">{apiError}</p>
+        )}
         <button
           type="button"
           onClick={handleSubmit}
-          className="h-[52px] w-full rounded-xl text-sm font-bold text-white"
+          disabled={isLoading}
+          className={`h-[52px] w-full rounded-xl text-sm font-bold text-white transition-opacity ${isLoading ? "opacity-50" : "opacity-100"}`}
           style={{
             background:
               "linear-gradient(135deg, rgb(122,158,130) 0%, rgb(5,150,105) 100%)",
           }}
         >
-          가입 완료
+          {isLoading ? "가입 중..." : "가입 완료"}
         </button>
       </div>
     </div>
