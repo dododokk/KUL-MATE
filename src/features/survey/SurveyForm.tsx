@@ -262,7 +262,7 @@ export default function SurveyForm({ mode = "create", initialData, onSubmit }: P
       </header>
 
       {/* Scrollable body */}
-      <div className="flex flex-col gap-4 px-[20px] pb-32 pt-[113px]">
+      <div className="flex flex-col gap-4 px-[20px] pb-32 pt-[129px]">
         {/* 기본 정보 */}
         <SectionCard icon={<SectionIcon src={basicInfoIcon} />} title="기본 정보">
           <Field label="성별">

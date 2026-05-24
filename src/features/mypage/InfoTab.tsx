@@ -3,6 +3,7 @@ import chattingIcon from "../../assets/mypage/chatting.svg";
 import calendarIcon from "../../assets/mypage/calendar.svg";
 import roommateProfileIcon from "../../assets/mypage/roommate-profile.svg";
 import roommateNoIcon from "../../assets/mypage/roommate-no.svg";
+import mySurveyIcon from "../../assets/mypage/my-survey.svg";
 import surveyIcon from "../../assets/mypage/survey.svg";
 import type { RoommateInfo } from "./types";
 
@@ -138,7 +139,11 @@ export default function InfoTab({
             className="w-full flex items-center gap-[12px] px-[16px] py-[15px] border-t border-[#f9fafb]"
           >
             <div className="flex items-center justify-center shrink-0 size-[32px]">
-              {idx === 0 && <img src={surveyIcon} alt="" className="w-[18px] h-[18px]" />}
+              <img
+                src={item.id === "lifestyle" ? mySurveyIcon : surveyIcon}
+                alt=""
+                className="w-[18px] h-[18px]"
+              />
             </div>
             <span className="font-medium text-[#1f2937] text-[14px] leading-[20px] flex-1 text-left">
               {item.label}
