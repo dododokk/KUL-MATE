@@ -38,6 +38,7 @@ function toMyStyleRequest(data: SurveyData): MyStyleSurveyRequest {
   };
 }
 
+// 내 스타일 설문 제출 (POST /api/surveys/my-style)
 export async function submitMyStyleSurvey(data: SurveyData): Promise<MyStyleSurveyResponse> {
   const { data: res } = await axiosInstance.post<MyStyleSurveyResponse>(
     "/api/surveys/my-style",
