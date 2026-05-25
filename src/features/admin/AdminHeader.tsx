@@ -1,22 +1,14 @@
 import adminLogoIcon from "../../assets/admin/adminLogo.svg";
-import usersIcon from "../../assets/admin/users.svg";
-import approvalIcon from "../../assets/admin/approval.svg";
-import matchingIcon from "../../assets/admin/matching.svg";
 import approvalManageOnIcon from "../../assets/admin/approvalManage-on.svg";
 import approvalManageOffIcon from "../../assets/admin/approvalManage-off.svg";
 import flagOnIcon from "../../assets/admin/flag-on.svg";
 import flagOffIcon from "../../assets/admin/flag-off.svg";
-import statsOnIcon from "../../assets/admin/stats-on.svg";
-import statsOffIcon from "../../assets/admin/stats-off.svg";
 
-export type AdminTab = "approval" | "report" | "stats";
+export type AdminTab = "approval" | "report";
 
 interface AdminHeaderProps {
   activeTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
-  totalMembers: number;
-  pendingApprovals: number;
-  weeklyMatches: number;
   onBack: () => void;
 }
 
@@ -38,15 +30,11 @@ const TABS: {
     onIcon: flagOnIcon,
     offIcon: flagOffIcon,
   },
-  { key: "stats", label: "통계", onIcon: statsOnIcon, offIcon: statsOffIcon },
 ];
 
 export default function AdminHeader({
   activeTab,
   onTabChange,
-  totalMembers,
-  pendingApprovals,
-  weeklyMatches,
   onBack,
 }: AdminHeaderProps) {
   return (
@@ -91,31 +79,6 @@ export default function AdminHeader({
             </p>
             <p className="text-xs text-[#9ca3af] leading-4">KUL:MATE Admin</p>
           </div>
-        </div>
-      </div>
-
-      {/* 미니 통계 카드 */}
-      <div className="flex gap-2 mb-4">
-        <div className="flex-1 bg-[#f3f7f4] border border-white/60 rounded-xl p-3 flex flex-col items-center">
-          <img src={usersIcon} alt="" className="w-6 h-6 mb-1" />
-          <p className="text-lg font-black text-[#7a9e82] leading-7">
-            {totalMembers}
-          </p>
-          <p className="text-xs text-[#6b7280]">전체 회원</p>
-        </div>
-        <div className="flex-1 bg-[#fffbeb] border border-white/60 rounded-xl p-3 flex flex-col items-center">
-          <img src={approvalIcon} alt="" className="w-6 h-6 mb-1" />
-          <p className="text-lg font-black text-[#d97706] leading-7">
-            {pendingApprovals}
-          </p>
-          <p className="text-xs text-[#6b7280]">승인 대기</p>
-        </div>
-        <div className="flex-1 bg-[#fff1f2] border border-white/60 rounded-xl p-3 flex flex-col items-center">
-          <img src={matchingIcon} alt="" className="w-6 h-6 mb-1" />
-          <p className="text-lg font-black text-[#f43f5e] leading-7">
-            {weeklyMatches}
-          </p>
-          <p className="text-xs text-[#6b7280]">이번 주 매칭</p>
         </div>
       </div>
 
