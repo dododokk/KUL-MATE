@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getPosts, getRecommendations } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
@@ -200,6 +200,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
@@ -249,8 +250,24 @@ export default function HomePage() {
     return type; // 기획에 따라 추가 기숙사가 있다면 여기에 추가
   };
 
-  // API 데이터를 UI에서 사용하는 구조(RoommatePost)로 변환
-  const posts: RoommatePost[] = useMemo(
+  const allPosts: RoommatePost[] = useMemo(
+    () =>
+      apiPosts.map((p) => ({
+        id: String(p.postId),
+        nickname: p.authorNickname,
+        majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
+        dormLabel: dormLabel(p.dormitoryType),
+        title: p.title,
+        sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
+        wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
+        bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
+        tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
+        date: p.createdAt.slice(0, 10),
+      })),
+    [apiPosts],
+  );
+
+  const recommendedPosts = useMemo(
     () =>
       apiPosts.map((p) => {
         const scoreTone = p.matchScore && p.matchScore >= 90 ? "primary" : "mint";
