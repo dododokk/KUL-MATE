@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getPosts, searchPosts } from "../../api/posts/postsApi";
 import type { SearchPostsParams } from "../../api/posts/postsApi";
@@ -33,7 +33,8 @@ export default function HomePage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<SearchPostsParams>({});
   const hasAlarm = true;
-  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
+  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] =
+    useState(false);
 
   useEffect(() => {
     getPreferenceSurveyStatus()
@@ -41,7 +42,9 @@ export default function HomePage() {
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
   const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
-  const [apiPosts, setApiPosts] = useState<Parameters<typeof apiPostToCard>[0][]>([]);
+  const [apiPosts, setApiPosts] = useState<
+    Parameters<typeof apiPostToCard>[0][]
+  >([]);
 
   useEffect(() => {
     if (activeTab !== "all") return;
@@ -51,7 +54,9 @@ export default function HomePage() {
         .then(setApiPosts)
         .catch(() => setApiPosts([]));
     } else {
-      getPosts().then(setApiPosts).catch(() => setApiPosts([]));
+      getPosts()
+        .then(setApiPosts)
+        .catch(() => setApiPosts([]));
     }
   }, [activeTab, location.key, activeFilters]);
 
@@ -256,7 +261,11 @@ export default function HomePage() {
             </div>
           ) : (
             posts.map((p) => (
-              <Link key={p.id} to={`/post/detail?id=${p.id}`} className="w-full">
+              <Link
+                key={p.id}
+                to={`/post/detail?id=${p.id}`}
+                className="w-full"
+              >
                 <RoommateCard post={p} />
               </Link>
             ))

@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { getPost, deletePost, addBookmark, removeBookmark } from "../../api/posts/postsApi";
+import {
+  getPost,
+  deletePost,
+  addBookmark,
+  removeBookmark,
+} from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
 import {
   recIconBookmarkActive,
