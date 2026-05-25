@@ -106,9 +106,18 @@ export default function MyPage() {
   }
 
   async function handleTogglePublic(id: number) {
+    const post = posts.find((p) => p.postId === id);
+    if (!post) return;
     try {
-      await togglePostVisibility(id);
-      setPosts((prev) => prev.map((p) => (p.postId === id ? { ...p, visible: !p.visible } : p)));
+      const newVisible = !post.visible;
+      await togglePostVisibility(id, newVisible);
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.postId === id
+            ? { ...p, visible: newVisible, visibilityLabel: newVisible ? "공개" : "비공개" }
+            : p
+        )
+      );
     } catch {
       alert("공개 설정 변경에 실패했습니다. 다시 시도해주세요.");
     }

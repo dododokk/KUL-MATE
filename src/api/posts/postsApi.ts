@@ -48,8 +48,8 @@ export async function updatePost(postId: number, body: CreatePostRequest): Promi
 }
 
 // 게시글 공개/비공개 전환 (PATCH /api/posts/{postId}/visibility)
-export async function togglePostVisibility(postId: number): Promise<void> {
-  await axiosInstance.patch(`/api/posts/${postId}/visibility`);
+export async function togglePostVisibility(postId: number, visible: boolean): Promise<void> {
+  await axiosInstance.patch(`/api/posts/${postId}/visibility`, { visible });
 }
 
 // 북마크 목록 조회 (GET /api/posts/bookmarks)
