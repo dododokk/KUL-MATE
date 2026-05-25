@@ -1,17 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import profileIcon from "../../assets/mypage/profile.svg";
 import changePwIcon from "../../assets/mypage/change-pw.svg";
 import logoutIcon from "../../assets/mypage/log-out.svg";
 import withdrawlIcon from "../../assets/mypage/withdrawl.svg";
-import type { AccountInfo } from "../../features/mypage/types";
-
-const MOCK_ACCOUNT: AccountInfo = {
-  userId: "kuluser01",
-  studentId: "202300001",
-  email: "hong@konkuk.ac.kr",
-  phone: "010-1234-5678",
-};
+import type { AccountSettingsResponse } from "../../api/mypage/type";
+import {
+  getAccountSettings,
+  updateAccountSettings,
+  changePassword,
+  withdrawAccount,
+} from "../../api/mypage/mypageApi";
 
 function ChevronDown() {
   return (
@@ -29,6 +28,7 @@ function ChevronUp() {
   );
 }
 
+// 모달 컴포넌트: 부모에게 입력한 비밀번호를 넘겨주도록 수정했습니다.
 function WithdrawModal({
   open,
   onClose,
@@ -36,7 +36,7 @@ function WithdrawModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (pw: string) => void;
 }) {
   const [password, setPassword] = useState("");
 
@@ -52,14 +52,12 @@ function WithdrawModal({
         className="bg-white rounded-[24px] p-[24px] w-full max-w-[384px] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Icon */}
         <div className="flex justify-center pb-[12px]">
           <div className="bg-[#fef2f2] flex items-center justify-center rounded-[16px] size-[48px]">
             <img src={withdrawlIcon} alt="" className="w-[24px] h-[24px]" />
           </div>
         </div>
 
-        {/* Title + desc */}
         <h3 className="font-bold text-[#111827] text-[16px] leading-[24px] text-center pb-[4px]">
           정말 탈퇴하시겠어요?
         </h3>
@@ -67,7 +65,6 @@ function WithdrawModal({
           모든 데이터가 영구 삭제되며 복구할 수 없어요.
         </p>
 
-        {/* Password field */}
         <div className="pb-[16px]">
           <label className="font-semibold text-[#374151] text-[14px] leading-[20px] block pb-[6px]">
             비밀번호 확인
@@ -81,7 +78,6 @@ function WithdrawModal({
           />
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-[12px]">
           <button
             type="button"
@@ -92,7 +88,7 @@ function WithdrawModal({
           </button>
           <button
             type="button"
-            onClick={onConfirm}
+            onClick={() => onConfirm(password)}
             className="flex-1 h-[46px] flex items-center justify-center bg-[#f87171] rounded-[16px]"
           >
             <span className="font-bold text-white text-[14px] leading-[20px]">탈퇴하기</span>
@@ -105,8 +101,14 @@ function WithdrawModal({
 
 export default function AccountSettingsPage() {
   const navigate = useNavigate();
-  const [nickname, setNickname] = useState("초록고양이");
-  const [phone, setPhone] = useState(MOCK_ACCOUNT.phone);
+  
+  // 데이터 및 로딩 상태 관리
+  const [account, setAccount] = useState<AccountSettingsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 폼 입력 상태 관리
+  const [nickname, setNickname] = useState("");
+  const [phone, setPhone] = useState("");
   const [pwExpanded, setPwExpanded] = useState(false);
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -115,16 +117,111 @@ export default function AccountSettingsPage() {
 
   const MAX_NICKNAME = 10;
 
+  // 1. 초기 데이터 불러오기 (Mount 시점)
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getAccountSettings();
+        setAccount(data);
+        setNickname(data.nickname);
+        setPhone(data.phoneNumber);
+      } catch (err) {
+        console.error("계정 설정 불러오기 실패:", err);
+        alert("계정 정보를 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  // 2. 프로필 정보(닉네임, 전화번호) 저장
+  const handleSaveProfile = async () => {
+    try {
+      await updateAccountSettings({ nickname, phoneNumber: phone });
+      alert("프로필 정보가 성공적으로 저장되었습니다.");
+    } catch (err) {
+      console.error("프로필 저장 실패:", err);
+      alert("저장에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 3. 비밀번호 변경
+  const handlePasswordChange = async () => {
+    if (!currentPw || !newPw || !confirmPw) {
+      alert("비밀번호 항목을 모두 입력해주세요.");
+      return;
+    }
+    if (newPw !== confirmPw) {
+      alert("새 비밀번호와 확인이 일치하지 않습니다.");
+      return;
+    }
+    
+    try {
+      await changePassword({ 
+        currentPassword: currentPw, 
+        newPassword: newPw, 
+        newPasswordConfirm: confirmPw 
+      });
+      alert("비밀번호가 성공적으로 변경되었습니다.");
+      setPwExpanded(false);
+      setCurrentPw("");
+      setNewPw("");
+      setConfirmPw("");
+    } catch (err: any) {
+      console.error("비밀번호 변경 실패:", err);
+      // 서버에서 보내주는 에러 메시지가 있다면 활용
+      alert(err.response?.data?.message || "비밀번호 변경에 실패했습니다.");
+    }
+  };
+
+  // 4. 회원 탈퇴
+  const handleWithdrawConfirm = async (password: string) => {
+    if (!password) {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+    try {
+      await withdrawAccount(password);
+      alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.");
+      setShowWithdraw(false);
+      // 토큰 삭제 로직 (axiosInstance 인터셉터 외에 수동으로도 처리)
+      localStorage.removeItem("kul_accessToken");
+      localStorage.removeItem("kul_refreshToken");
+      navigate("/login");
+    } catch (err: any) {
+      console.error("회원 탈퇴 실패:", err);
+      alert(err.response?.data?.message || "비밀번호가 일치하지 않거나 탈퇴 처리에 실패했습니다.");
+    }
+  };
+
+  // 5. 로그아웃
+  const handleLogout = () => {
+    if (window.confirm("정말 로그아웃 하시겠습니까?")) {
+      localStorage.removeItem("kul_accessToken");
+      localStorage.removeItem("kul_refreshToken");
+      navigate("/login");
+    }
+  };
+
+  // 로딩 뷰
+  if (isLoading || !account) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#7a9e82]"></div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen w-full"
       style={{ backgroundImage: "linear-gradient(160deg, rgb(240, 250, 244) 0%, rgb(255, 255, 255) 60%)" }}
     >
-      {/* Header spacer */}
       <div className="h-[104px]" />
 
       {/* Fixed header */}
-      <div className="fixed top-0 left-0 w-full z-10 h-[104px] pt-[56px] pb-[16px] px-[20px] flex items-end">
+      <div className="fixed top-0 left-0 w-full z-10 h-[104px] pt-[56px] pb-[16px] px-[20px] flex items-end bg-white/80 backdrop-blur-md">
         <div className="flex items-center w-full">
           <button
             type="button"
@@ -136,32 +233,38 @@ export default function AccountSettingsPage() {
             </svg>
           </button>
           <h1 className="font-bold text-[#111827] text-[16px] leading-[24px] flex-1">계정 설정</h1>
-          <button type="button" className="font-bold text-[#7a9e82] text-[14px] leading-[20px]">
+          <button 
+            type="button" 
+            onClick={handleSaveProfile}
+            className="font-bold text-[#7a9e82] text-[14px] leading-[20px]"
+          >
             저장
           </button>
         </div>
       </div>
 
-      {/* Content */}
       <div className="px-[20px] pb-[40px]">
         {/* Profile avatar */}
         <div className="flex flex-col items-center py-[16px]">
           <div
-            className="flex items-center justify-center rounded-[16px] border-2 border-[rgba(122,158,130,0.2)] p-[2px] size-[80px] mb-[8px]"
+            className="flex items-center justify-center rounded-[16px] border-2 border-[rgba(122,158,130,0.2)] p-[2px] size-[80px] mb-[8px] overflow-hidden"
             style={{ backgroundImage: "linear-gradient(135deg, rgb(226,238,228) 0%, rgb(209,250,229) 100%)" }}
           >
-            <img src={profileIcon} alt="" className="w-[37px] h-[37px]" />
+            {account.profileImageUrl ? (
+              <img src={account.profileImageUrl} alt="프로필" className="w-full h-full object-cover rounded-[14px]" />
+            ) : (
+              <img src={profileIcon} alt="" className="w-[37px] h-[37px]" />
+            )}
           </div>
           <span className="font-normal text-[#9ca3af] text-[12px] leading-[16px]">기본 프로필 아이콘 사용 중</span>
         </div>
 
-        {/* 프로필 정보 */}
+        {/* 프로필 정보 수정 영역 */}
         <div className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] p-[21px] mb-[16px]">
           <p className="font-bold text-[rgba(122,158,130,0.6)] text-[12px] leading-[16px] tracking-[0.3px] mb-[16px]">
             프로필 정보
           </p>
 
-          {/* 닉네임 */}
           <div className="mb-[16px]">
             <label className="font-semibold text-[#374151] text-[14px] leading-[20px] block mb-[6px]">닉네임</label>
             <input
@@ -175,7 +278,6 @@ export default function AccountSettingsPage() {
             </p>
           </div>
 
-          {/* 전화번호 */}
           <div>
             <label className="font-semibold text-[#374151] text-[14px] leading-[20px] block mb-[6px]">전화번호</label>
             <input
@@ -187,15 +289,15 @@ export default function AccountSettingsPage() {
           </div>
         </div>
 
-        {/* 계정 정보 (변경 불가) */}
+        {/* 계정 정보 (Read-Only) */}
         <div className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] p-[21px] mb-[16px]">
           <p className="font-bold text-[rgba(122,158,130,0.6)] text-[12px] leading-[16px] tracking-[0.3px] mb-[16px]">
             계정 정보 (변경 불가)
           </p>
           {[
-            { label: "아이디", value: MOCK_ACCOUNT.userId },
-            { label: "학번", value: MOCK_ACCOUNT.studentId },
-            { label: "학교 이메일", value: MOCK_ACCOUNT.email },
+            { label: "아이디", value: account.username },
+            { label: "학번", value: account.studentId },
+            { label: "학교 이메일", value: account.email },
           ].map((row, idx) => (
             <div
               key={row.label}
@@ -207,7 +309,7 @@ export default function AccountSettingsPage() {
           ))}
         </div>
 
-        {/* 비밀번호 변경 accordion */}
+        {/* 비밀번호 변경 아코디언 */}
         <div className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] overflow-hidden mb-[16px]">
           <button
             type="button"
@@ -245,6 +347,7 @@ export default function AccountSettingsPage() {
               ))}
               <button
                 type="button"
+                onClick={handlePasswordChange}
                 className="w-full h-[44px] flex items-center justify-center bg-[#7a9e82] rounded-[12px] mt-[12px]"
               >
                 <span className="font-bold text-white text-[14px] leading-[20px]">비밀번호 변경</span>
@@ -256,6 +359,7 @@ export default function AccountSettingsPage() {
         {/* 로그아웃 */}
         <button
           type="button"
+          onClick={handleLogout}
           className="w-full flex items-center gap-[12px] backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] px-[21px] py-[17px] h-[66px] mb-[16px]"
         >
           <div className="flex items-center justify-center size-[32px]">
@@ -280,10 +384,7 @@ export default function AccountSettingsPage() {
       <WithdrawModal
         open={showWithdraw}
         onClose={() => setShowWithdraw(false)}
-        onConfirm={() => {
-          setShowWithdraw(false);
-          navigate("/login");
-        }}
+        onConfirm={handleWithdrawConfirm}
       />
     </div>
   );

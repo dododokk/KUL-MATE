@@ -6,7 +6,7 @@ import type { SavedPost } from "./types";
 
 type Props = {
   posts: SavedPost[];
-  onToggleBookmark: (id: string) => void;
+  onToggleBookmark: (id: number) => void;
 };
 
 export default function SavedPostList({ posts, onToggleBookmark }: Props) {
@@ -21,7 +21,7 @@ export default function SavedPostList({ posts, onToggleBookmark }: Props) {
   return (
     <div className="flex flex-col gap-[12px]">
       {posts.map((post) => (
-        <SavedPostCard key={post.id} post={post} onToggleBookmark={onToggleBookmark} />
+        <SavedPostCard key={post.postId} post={post} onToggleBookmark={onToggleBookmark} />
       ))}
     </div>
   );
@@ -32,14 +32,14 @@ function SavedPostCard({
   onToggleBookmark,
 }: {
   post: SavedPost;
-  onToggleBookmark: (id: string) => void;
+  onToggleBookmark: (id: number) => void;
 }) {
-  const [bookmarked, setBookmarked] = useState(post.isBookmarked);
+  const [bookmarked, setBookmarked] = useState(post.bookmarked);
 
   function handleToggle(e: React.MouseEvent) {
     e.stopPropagation();
     setBookmarked((prev) => !prev);
-    onToggleBookmark(post.id);
+    onToggleBookmark(post.postId);
   }
 
   return (
@@ -51,7 +51,7 @@ function SavedPostCard({
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-[#111827] text-[12px] leading-[16px]">{post.authorNickname}</span>
-          <span className="font-normal text-[#9ca3af] text-[12px] leading-[16px]">{post.authorDepartment}</span>
+          <span className="font-normal text-[#9ca3af] text-[12px] leading-[16px]">{post.major}</span>
         </div>
         <button
           type="button"
@@ -70,12 +70,12 @@ function SavedPostCard({
 
       {/* Meta */}
       <p className="font-normal text-[#9ca3af] text-[12px] leading-[16px] pb-[8px]">
-        {post.dorm} · {post.date}
+        {post.dormitoryType} · {new Date(post.createdAt).toLocaleDateString()}
       </p>
 
       {/* Tags */}
       <div className="flex flex-wrap gap-[4px]">
-        {post.tags.map((tag) => (
+        {post.tags?.map((tag) => (
           <span
             key={tag}
             className="bg-[rgba(122,158,130,0.1)] px-[8px] py-[2px] rounded-full font-normal text-[#7a9e82] text-[12px] leading-[16px]"
