@@ -11,6 +11,7 @@ import {
   changePassword,
   withdrawAccount,
 } from "../../api/mypage/mypageApi";
+import { logout } from "../../api/auth/authApi";
 
 function ChevronDown() {
   return (
@@ -196,10 +197,16 @@ export default function AccountSettingsPage() {
   };
 
   // 5. 로그아웃
-  const handleLogout = () => {
-    if (window.confirm("정말 로그아웃 하시겠습니까?")) {
+  const handleLogout = async () => {
+    if (!window.confirm("정말 로그아웃 하시겠습니까?")) return;
+    try {
+      await logout();
+    } catch {
+      // 서버 실패해도 로컬은 정리
+    } finally {
       localStorage.removeItem("kul_accessToken");
       localStorage.removeItem("kul_refreshToken");
+      localStorage.removeItem("kul_userId");
       navigate("/login");
     }
   };

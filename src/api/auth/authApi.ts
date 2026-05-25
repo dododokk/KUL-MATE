@@ -54,3 +54,8 @@ export async function login(body: LoginRequest): Promise<LoginResponse> {
   const { data } = await axiosInstance.post<LoginResponse>("/api/auth/login", body);
   return data;
 }
+
+// 로그아웃 (POST /api/auth/logout)
+export async function logout(): Promise<void> {
+  await axiosInstance.post("/api/auth/logout");
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { getPost } from "../../api/posts/postsApi";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { getPost, deletePost } from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
 import {
   recIconBookmarkActive,
@@ -8,6 +8,8 @@ import {
   recIconBack,
   recIconReport,
 } from "../../assets/figma/home";
+import editIcon from "../../assets/mypage/edit-mypost.svg";
+import deleteIcon from "../../assets/mypage/delete-mypost.svg";
 
 // 🌟 우리가 방금 만든 ReportPage 컴포넌트를 불러옵니다! (경로 확인 필수)
 import ReportPage from "../report/ReportPage"; 
@@ -65,8 +67,12 @@ function SensitivityDots({ score }: { score: number }) {
 
 export default function PostDetailPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const currentUserId = Number(localStorage.getItem("kul_userId"));
 
   // 🌟 신고 모달을 열고 닫을 상태(State)를 추가합니다.
   const [showReportModal, setShowReportModal] = useState(false);
@@ -89,6 +95,22 @@ export default function PostDetailPage() {
     // TODO: 북마크 API 연동 시 이곳에 추가
   };
 
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!window.confirm("구인글을 삭제하시겠습니까?")) return;
+    setIsDeleting(true);
+    try {
+      await deletePost(post.postId);
+      navigate("/home", { replace: true });
+    } catch {
+      alert("삭제에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isMyPost = !!post && post.author.authorId === currentUserId;
+
   const lifestyle = post?.lifestyle;
 
   const infoCards = lifestyle
@@ -99,8 +121,14 @@ export default function PostDetailPage() {
         ["샤워 시간", l(SHOWER_LABELS, lifestyle.showerTime)],
         ["잠버릇", l(SLEEP_HABIT_LABELS, lifestyle.sleepHabit)],
         ["본가 방문", l(HOME_VISIT_LABELS, lifestyle.homeVisitFrequency)],
-        ["취침", `${lifestyle.sleepStartTime} ~ ${lifestyle.sleepEndTime}`],
-        ["기상", `${lifestyle.wakeUpStartTime} ~ ${lifestyle.wakeUpEndTime}`],
+        [
+          "취침",
+          `${lifestyle.sleepStartTime.slice(0, 5)} ~ ${lifestyle.sleepEndTime.slice(0, 5)}`,
+        ],
+        [
+          "기상",
+          `${lifestyle.wakeUpStartTime.slice(0, 5)} ~ ${lifestyle.wakeUpEndTime.slice(0, 5)}`,
+        ],
       ]
     : [];
 
@@ -141,11 +169,73 @@ export default function PostDetailPage() {
             className="flex h-9 w-9 items-center justify-center"
           >
             <img
-              src={recIconReport}
-              alt="신고하기 아이콘"
+              src={recIconBack}
+              alt="뒤로가기 아이콘"
               className="h-6 w-6 object-contain"
             />
           </button>
+        </div>
+        <h1 className="flex h-9 items-center text-[14px] font-bold text-[#111827]">
+          구인글 상세
+        </h1>
+
+        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
+          {isMyPost ? (
+            <>
+              <Link
+                to={`/post/create?id=${post.postId}`}
+                className="flex h-9 w-9 items-center justify-center"
+                aria-label="수정"
+              >
+                <img
+                  src={editIcon}
+                  alt="수정"
+                  className="h-4 w-4 object-contain"
+                />
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex h-9 w-9 items-center justify-center disabled:opacity-50"
+                aria-label="삭제"
+              >
+                <img
+                  src={deleteIcon}
+                  alt="삭제"
+                  className="h-4 w-4 object-contain"
+                />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleBookmarkToggle}
+                className="flex h-9 w-9 items-center justify-center"
+                aria-label="북마크"
+              >
+                <img
+                  src={
+                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
+                  }
+                  alt="북마크"
+                  className="block h-[20px] w-[20px]"
+                  draggable={false}
+                />
+              </button>
+              <Link
+                to="/report"
+                className="flex h-9 w-9 items-center justify-center"
+              >
+                <img
+                  src={recIconReport}
+                  alt="신고하기 아이콘"
+                  className="h-6 w-6 object-contain"
+                />
+              </Link>
+            </>
+          )}
         </div>
       </header>
 

@@ -8,7 +8,8 @@ import SavedPostList from "../../features/mypage/SavedPostList";
 import type { MyPageTab, MyPost, RoommateInfo, SavedPost, UserProfile } from "../../features/mypage/types";
 
 // 방금 만든 실제 API 함수들을 가져옵니다. (경로는 프로젝트 구조에 맞게 살짝 조절해주세요)
-import { getMyPageSummary, getMyPosts, getSavedPosts } from "../../api/mypage/mypageApi"; 
+import { getMyPageSummary, getMyPosts, getSavedPosts } from "../../api/mypage/mypageApi";
+import { deletePost, togglePostVisibility } from "../../api/posts/postsApi";
 import profileIcon from "../../assets/mypage/profile.svg";
 import settingIcon from "../../assets/mypage/setting.svg";
 import noticeIcon from "../../assets/mypage/notice.svg";
@@ -104,9 +105,13 @@ export default function MyPage() {
     setShowToast(true);
   }
 
-  function handleTogglePublic(id: number) {
-    // API 연결 후에는 이 부분에서 PATCH /api/posts/{postId}/visibility 같은 가시성 변경 API를 호출해야 합니다.
-    setPosts((prev) => prev.map((p) => (p.postId === id ? { ...p, visible: !p.visible } : p)));
+  async function handleTogglePublic(id: number) {
+    try {
+      await togglePostVisibility(id);
+      setPosts((prev) => prev.map((p) => (p.postId === id ? { ...p, visible: !p.visible } : p)));
+    } catch {
+      alert("공개 설정 변경에 실패했습니다. 다시 시도해주세요.");
+    }
   }
 
   function handleToggleBookmark(id: number) {
@@ -258,9 +263,21 @@ export default function MyPage() {
         {activeTab === "posts" && (
           <MyPostList
             posts={posts}
+            onPress={(id) => navigate(`/post/detail?id=${id}`)}
             onTogglePublic={handleTogglePublic}
-            onEdit={(id) => navigate(`/post/detail?id=${id}`)}
-            onDelete={(id) => setPosts((prev) => prev.filter((p) => p.postId !== id))}
+            onEdit={(id) => {
+              const post = posts.find((p) => p.postId === id);
+              navigate(`/post/create?id=${id}`, { state: { visible: post?.visible ?? true } });
+            }}
+            onDelete={async (id) => {
+              if (!window.confirm("구인글을 삭제하시겠습니까?")) return;
+              try {
+                await deletePost(id);
+                setPosts((prev) => prev.filter((p) => p.postId !== id));
+              } catch {
+                alert("삭제에 실패했습니다. 다시 시도해주세요.");
+              }
+            }}
           />
         )}
         {activeTab === "saved" && (
