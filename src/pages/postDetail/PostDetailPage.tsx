@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { getPost } from "../../api/posts/postsApi";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { getPost, deletePost } from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
 import {
   recIconBookmarkActive,
@@ -8,6 +8,8 @@ import {
   recIconBack,
   recIconReport,
 } from "../../assets/figma/home";
+import editIcon from "../../assets/mypage/edit-mypost.svg";
+import deleteIcon from "../../assets/mypage/delete-mypost.svg";
 
 const DORM_LABELS: Record<string, string> = { LAKE: "레이크홀" };
 const SMOKING_LABELS: Record<string, string> = {
@@ -62,8 +64,12 @@ function SensitivityDots({ score }: { score: number }) {
 
 export default function PostDetailPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const currentUserId = Number(localStorage.getItem("kul_userId"));
 
   useEffect(() => {
     const idParam = searchParams.get("id");
@@ -82,6 +88,22 @@ export default function PostDetailPage() {
     setIsBookmarked((prev) => !prev);
   };
 
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!window.confirm("구인글을 삭제하시겠습니까?")) return;
+    setIsDeleting(true);
+    try {
+      await deletePost(post.postId);
+      navigate("/home", { replace: true });
+    } catch {
+      alert("삭제에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isMyPost = !!post && post.author.authorId === currentUserId;
+
   const lifestyle = post?.lifestyle;
 
   const infoCards = lifestyle
@@ -92,50 +114,93 @@ export default function PostDetailPage() {
         ["샤워 시간", l(SHOWER_LABELS, lifestyle.showerTime)],
         ["잠버릇", l(SLEEP_HABIT_LABELS, lifestyle.sleepHabit)],
         ["본가 방문", l(HOME_VISIT_LABELS, lifestyle.homeVisitFrequency)],
-        ["취침", `${lifestyle.sleepStartTime} ~ ${lifestyle.sleepEndTime}`],
-        ["기상", `${lifestyle.wakeUpStartTime} ~ ${lifestyle.wakeUpEndTime}`],
+        [
+          "취침",
+          `${lifestyle.sleepStartTime.slice(0, 5)} ~ ${lifestyle.sleepEndTime.slice(0, 5)}`,
+        ],
+        [
+          "기상",
+          `${lifestyle.wakeUpStartTime.slice(0, 5)} ~ ${lifestyle.wakeUpEndTime.slice(0, 5)}`,
+        ],
       ]
     : [];
 
   return (
     <div className="min-h-screen bg-[#f8faf8] pb-28">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
-        <Link
-          to="/home"
-          className="h-9 w-9 text-center leading-9 text-[#6b7280]"
-        >
-          <img
-            src={recIconBack}
-            alt="뒤로가기 아이콘"
-            className="h-6 w-6 object-contain"
-          />
-        </Link>
-        <h1 className="text-[14px] font-bold text-[#111827]">구인글 상세</h1>
-
-        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
-          <button
-            type="button"
-            onClick={handleBookmarkToggle}
-            className="flex h-9 w-9 items-center justify-center"
-            aria-label="북마크"
-          >
-            <img
-              src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
-              alt="북마크"
-              className="block h-[20px] w-[20px]"
-              draggable={false}
-            />
-          </button>
+        <div className="flex w-[76px] items-center justify-start">
           <Link
-            to="/report"
-            className="flex h-9 w-9 items-center justify-center"
+            to="/home"
+            className="flex h-9 w-9 items-center justify-center text-[#6b7280]"
           >
             <img
-              src={recIconReport}
-              alt="신고하기 아이콘"
+              src={recIconBack}
+              alt="뒤로가기 아이콘"
               className="h-6 w-6 object-contain"
             />
           </Link>
+        </div>
+        <h1 className="flex h-9 items-center text-[14px] font-bold text-[#111827]">
+          구인글 상세
+        </h1>
+
+        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
+          {isMyPost ? (
+            <>
+              <Link
+                to={`/post/create?id=${post.postId}`}
+                className="flex h-9 w-9 items-center justify-center"
+                aria-label="수정"
+              >
+                <img
+                  src={editIcon}
+                  alt="수정"
+                  className="h-4 w-4 object-contain"
+                />
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex h-9 w-9 items-center justify-center disabled:opacity-50"
+                aria-label="삭제"
+              >
+                <img
+                  src={deleteIcon}
+                  alt="삭제"
+                  className="h-4 w-4 object-contain"
+                />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleBookmarkToggle}
+                className="flex h-9 w-9 items-center justify-center"
+                aria-label="북마크"
+              >
+                <img
+                  src={
+                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
+                  }
+                  alt="북마크"
+                  className="block h-[20px] w-[20px]"
+                  draggable={false}
+                />
+              </button>
+              <Link
+                to="/report"
+                className="flex h-9 w-9 items-center justify-center"
+              >
+                <img
+                  src={recIconReport}
+                  alt="신고하기 아이콘"
+                  className="h-6 w-6 object-contain"
+                />
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
