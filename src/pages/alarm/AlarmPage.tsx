@@ -1,87 +1,116 @@
-import { useState } from "react";
+// src/pages/alarm/AlarmPage.tsx
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AlarmItem from "../../features/alarm/AlarmItem";
-import type { AlarmType } from "../../features/alarm/AlarmItem";
+import { getNotifications, readNotification, type NotificationResponse } from "../../api/notification/notificationApi";
 
-type Alarm = {
-  id: string;
-  type: AlarmType;
-  title: string;
-  description: string;
-  time: string;
-  isRead: boolean;
-};
+// ISO 시간 문자열을 간단한 날짜/시간으로 포맷팅해주는 헬퍼 함수
+function formatTime(isoString: string): string {
+  try {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
-const INITIAL_ALARMS: Alarm[] = [
-  {
-    id: "1",
-    type: "request",
-    title: "룸메이트 신청이 왔어요!",
-    description: "코딩고수민준님이 룸메이트 신청을 보냈습니다.",
-    time: "5분 전",
-    isRead: false,
-  },
-  {
-    id: "2",
-    type: "accept",
-    title: "신청이 수락됐어요!",
-    description: "밝은서연이님이 룸메이트 신청을 수락했습니다.",
-    time: "1시간 전",
-    isRead: false,
-  },
-  {
-    id: "3",
-    type: "recommendation",
-    title: "새로운 추천 룸메이트!",
-    description: "회원님과 92% 일치하는 룸메이트가 있어요.",
-    time: "3시간 전",
-    isRead: true,
-  },
-  {
-    id: "4",
-    type: "approval",
-    title: "기숙사 합격증 승인 완료",
-    description:
-      "제출하신 기숙사 합격증이 승인되었습니다. 이제 모든 기능을 이용하실 수 있어요!",
-    time: "어제",
-    isRead: true,
-  },
-];
+    if (diffMins < 1) return "방금 전";
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+  } catch {
+    return "";
+  }
+}
 
 export default function AlarmPage() {
   const navigate = useNavigate();
-  const [alarms, setAlarms] = useState<Alarm[]>(INITIAL_ALARMS);
+  const [alarms, setAlarms] = useState<NotificationResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const unreadCount = alarms.filter((a) => !a.isRead).length;
+  // 1. 컴포넌트 마운트 시 알림 목록 API 호출
+  useEffect(() => {
+    getNotifications()
+      .then((data) => {
+        // 최근 알림이 위로 오도록 정렬되어 오지 않는다면 프론트에서 정렬 처리 가능
+        setAlarms(data);
+      })
+      .catch((err) => {
+        console.error("알림 목록 불러오기 실패:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
-  function markAllRead() {
-    setAlarms((prev) => prev.map((a) => ({ ...a, isRead: true })));
-  }
+  // 2. 알림 단건 읽음 처리 기능
+  const handleReadAlarm = async (id: number) => {
+    // 이미 읽은 알림이면 API 요청 안 함
+    const target = alarms.find((a) => a.notificationId === id);
+    if (!target || target.isRead) return;
 
-  function markRead(id: string) {
-    setAlarms((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, isRead: true } : a)),
+    try {
+      await readNotification(id);
+      // 화면 UI 상태 업데이트
+      setAlarms((prev) =>
+        prev.map((alarm) =>
+          alarm.notificationId === id ? { ...alarm, isRead: true } : alarm
+        )
+      );
+    } catch (err) {
+      console.error("알림 읽음 처리 실패:", err);
+    }
+  };
+
+  // 3. 모두 읽기 기능 (백엔드 전체 읽기 API가 없으므로 현재 안 읽은 알림들을 순회하며 처리)
+  const markAllRead = async () => {
+    const unreadAlarms = alarms.filter((a) => !a.isRead);
+    if (unreadAlarms.length === 0) return;
+
+    try {
+      // 모든 안 읽은 알림의 PATCH API를 병렬로 실행
+      await Promise.all(
+        unreadAlarms.map((alarm) => readNotification(alarm.notificationId))
+      );
+      // 전체 상태를 읽음으로 업데이트
+      setAlarms((prev) => prev.map((alarm) => ({ ...alarm, isRead: true })));
+    } catch (err) {
+      console.error("전체 알림 읽음 처리 중 일부 실패:", err);
+    }
+  };
+
+  // 룸메이트 신청 수락/거절 핸들러 (추후 매칭 관련 API 연동 시 살을 붙이시면 됩니다!)
+  const handleAcceptRequest = (id: number) => {
+    alert(`신청을 수락했습니다. (알림 ID: ${id})`);
+    handleReadAlarm(id);
+  };
+
+  const handleDeclineRequest = (id: number) => {
+    alert(`신청을 거절했습니다. (알림 ID: ${id})`);
+    handleReadAlarm(id);
+  };
+
+  const unreadCount = alarms.filter((alarm) => !alarm.isRead).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8faf8]">
+        <p className="text-[14px] text-[#6b7280]">알림을 불러오는 중...</p>
+      </div>
     );
   }
 
   return (
-    <div
-      className="flex flex-col min-h-screen w-full"
-      style={{
-        backgroundImage:
-          "linear-gradient(160deg, rgb(240, 250, 244) 0%, rgb(255, 255, 255) 50%)",
-      }}
-    >
-      {/* Header spacer */}
-      <div className="h-[113px] shrink-0" />
-
-      {/* Fixed header */}
-      <div className="fixed top-0 left-0 w-full backdrop-blur-[6px] bg-[rgba(255,255,255,0.92)] border-b border-[rgba(122,158,130,0.1)] h-[113px] pt-[56px] pb-[17px] px-[20px] z-10">
-        <div className="flex items-center justify-between h-[40px]">
-          <div className="flex items-center gap-[12px]">
-            <button
-              className="flex items-center justify-center size-[32px]"
-              onClick={() => navigate(-1)}
+    <div className="min-h-screen bg-[#f8faf8] pb-10">
+      {/* Header */}
+      <div className="sticky top-0 z-10 border-b border-[#f3f4f6] bg-white px-[20px] pb-[16px] pt-[60px]">
+        <div className="flex items-end justify-between">
+          <div className="flex items-center gap-[8px]">
+            <button 
+              type="button"
+              onClick={() => navigate(-1)} 
+              className="flex items-center justify-center"
+              aria-label="뒤로가기"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
@@ -104,7 +133,7 @@ export default function AlarmPage() {
             </div>
           </div>
 
-          <button onClick={markAllRead}>
+          <button type="button" onClick={markAllRead}>
             <span className="font-semibold text-[#7a9e82] text-[12px] leading-[16px]">
               모두 읽기
             </span>
@@ -114,19 +143,25 @@ export default function AlarmPage() {
 
       {/* Alarm list */}
       <div className="flex flex-col px-[20px] py-[16px] gap-[8px]">
-        {alarms.map((alarm) => (
-          <AlarmItem
-            key={alarm.id}
-            type={alarm.type}
-            title={alarm.title}
-            description={alarm.description}
-            time={alarm.time}
-            isRead={alarm.isRead}
-            onAccept={() => markRead(alarm.id)}
-            onDecline={() => markRead(alarm.id)}
-            onViewProfile={() => {}}
-          />
-        ))}
+        {alarms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-[80px]">
+            <p className="text-[14px] text-[#9ca3af]">새로운 알림이 없습니다.</p>
+          </div>
+        ) : (
+          alarms.map((alarm) => (
+            <AlarmItem
+              key={alarm.notificationId}
+              id={alarm.notificationId}
+              type={alarm.type}
+              content={alarm.content}
+              time={formatTime(alarm.createdAt)}
+              isRead={alarm.isRead}
+              onRead={handleReadAlarm}
+              onAccept={handleAcceptRequest}
+              onDecline={handleDeclineRequest}
+            />
+          ))
+        )}
       </div>
     </div>
   );

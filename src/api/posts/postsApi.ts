@@ -1,5 +1,11 @@
 import axiosInstance from "../axiosInstance";
-import type { GetPostsResponse, PostDetail, CreatePostRequest, CreatePostResponse } from "./type";
+import type { 
+  PostSummary, 
+  GetPostsResponse, 
+  PostDetail, 
+  CreatePostRequest, 
+  CreatePostResponse 
+} from "./type";
 
 export interface SearchPostsParams {
   keyword?: string;
@@ -31,6 +37,11 @@ export async function getPost(postId: number): Promise<PostDetail> {
   return data;
 }
 
+// 추천 구인글 목록 조회 (GET /api/recommendations)
+export async function getRecommendations(): Promise<PostSummary[]> {
+  const { data } = await axiosInstance.get<PostSummary[]>("/api/recommendations");
+  return data;
+}
 // 게시글 작성 (POST /api/posts)
 export async function createPost(body: CreatePostRequest): Promise<CreatePostResponse> {
   const { data } = await axiosInstance.post<CreatePostResponse>("/api/posts", body);
