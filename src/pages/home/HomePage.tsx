@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getPosts } from "../../api/posts/postsApi";
+import { getPosts, getRecommendations } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
 import {
@@ -202,56 +202,76 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const hasAlarm = true; // 읽지 않은 알림이 있으면 true
+  
+  // 추후 알림 API와 연동할 수 있도록 남겨둡니다.
+  const hasAlarm = true; 
+  
   const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
+  
+  // API 결과와 로딩 상태를 관리합니다.
+  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getPreferenceSurveyStatus()
       .then((res) => setIsPreferenceSurveyCompleted(res.completed))
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
-  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
-  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
 
+  // 탭 변경 시 적절한 API 호출
   useEffect(() => {
-    if (activeTab !== "all") return;
-    getPosts().then(setApiPosts).catch(() => setApiPosts([]));
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      try {
+        if (activeTab === "all") {
+          const data = await getPosts();
+          setApiPosts(data);
+        } else {
+          const data = await getRecommendations();
+          setApiPosts(data);
+        }
+      } catch (err) {
+        console.error("데이터를 불러오는 중 오류 발생:", err);
+        setApiPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, [activeTab]);
 
   const pillBgs = [recPill1, recPill2, recPill3, recPill4];
 
   const dormLabel = (type: string) => {
     if (type === "LAKE") return "레이크홀";
-    return type;
+    return type; // 기획에 따라 추가 기숙사가 있다면 여기에 추가
   };
 
-  const allPosts: RoommatePost[] = useMemo(
+  // API 데이터를 UI에서 사용하는 구조(RoommatePost)로 변환
+  const posts: RoommatePost[] = useMemo(
     () =>
-      apiPosts.map((p) => ({
-        id: String(p.postId),
-        nickname: p.authorNickname,
-        majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
-        dormLabel: dormLabel(p.dormitoryType),
-        title: p.title,
-        sleepTime: `${p.sleepStartTime} - ${p.sleepEndTime}`,
-        wakeTime: `${p.wakeUpStartTime} - ${p.wakeUpEndTime}`,
-        bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
-        tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
-        date: p.createdAt.slice(0, 10),
-      })),
-    [apiPosts],
+      apiPosts.map((p) => {
+        const scoreTone = p.matchScore && p.matchScore >= 90 ? "primary" : "mint";
+        
+        return {
+          id: String(p.postId),
+          nickname: p.authorNickname,
+          majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
+          dormLabel: dormLabel(p.dormitoryType),
+          title: p.title,
+          sleepTime: `${p.sleepStartTime} - ${p.sleepEndTime}`,
+          wakeTime: `${p.wakeUpStartTime} - ${p.wakeUpEndTime}`,
+          bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
+          tags: p.tags?.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })) || [],
+          date: p.createdAt.slice(0, 10),
+          score: activeTab === "recommended" && p.matchScore ? `${p.matchScore}점` : undefined,
+          scoreTone: activeTab === "recommended" && p.matchScore ? scoreTone : undefined,
+        };
+      }),
+    [apiPosts, activeTab]
   );
-
-  const recommendedPosts = useMemo(
-    () =>
-      allPosts.slice(0, 2).map((post, idx) => ({
-        ...post,
-        score: idx === 0 ? "92점" : "78점",
-        scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
-      })),
-    [allPosts],
-  );
-  const posts = activeTab === "recommended" ? recommendedPosts : allPosts;
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -436,6 +456,14 @@ export default function HomePage() {
                 </svg>
                 바로가기
               </button>
+            </div>
+          ) : isLoading ? (
+            <div className="flex w-full justify-center py-10">
+              <span className="text-sm text-gray-400">데이터를 불러오는 중...</span>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="flex w-full justify-center py-10">
+              <span className="text-sm text-gray-400">등록된 구인글이 없습니다.</span>
             </div>
           ) : (
             posts.map((p) => (
