@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getPosts, addBookmark, removeBookmark } from "../../api/posts/postsApi";
+import { getPosts, searchPosts, addBookmark, removeBookmark } from "../../api/posts/postsApi";
+import type { SearchPostsParams } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
 import {
@@ -208,6 +209,9 @@ export default function HomePage() {
   const location = useLocation();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState<SearchPostsParams>({});
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasAlarm = true; // 읽지 않은 알림이 있으면 true
   const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
 
@@ -221,8 +225,21 @@ export default function HomePage() {
 
   useEffect(() => {
     if (activeTab !== "all") return;
-    getPosts().then(setApiPosts).catch(() => setApiPosts([]));
-  }, [activeTab, location.key]);
+    const keyword = searchQuery.trim();
+    const hasFilter = Object.values(activeFilters).some((v) => v);
+    const fetch = () => {
+      if (keyword || hasFilter) {
+        searchPosts({ keyword: keyword || undefined, ...activeFilters })
+          .then(setApiPosts)
+          .catch(() => setApiPosts([]));
+      } else {
+        getPosts().then(setApiPosts).catch(() => setApiPosts([]));
+      }
+    };
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(fetch, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [activeTab, location.key, searchQuery, activeFilters]);
 
   const pillBgs = [recPill1, recPill2, recPill3, recPill4];
 
@@ -307,12 +324,14 @@ export default function HomePage() {
 
           <div className="flex w-full items-start pb-[16px]">
             <div className="relative h-[42px] w-full">
-              <div className="flex h-[42px] w-full items-center rounded-[12px] border border-[rgba(122,158,130,0.15)] bg-[rgba(243,247,244,0.4)] py-[11px] pl-[41px] pr-[17px] text-[14px] leading-[20px]">
-                <span className="text-[#9ca3af]">
-                  닉네임, 학과, 키워드로 검색...
-                </span>
-              </div>
-              <div className="absolute left-[12px] top-[11px] h-[20px] w-[20px]">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="닉네임, 학과, 키워드로 검색..."
+                className="h-[42px] w-full rounded-[12px] border border-[rgba(122,158,130,0.15)] bg-[rgba(243,247,244,0.4)] py-[11px] pl-[41px] pr-[17px] text-[14px] leading-[20px] text-[#111827] placeholder:text-[#9ca3af] focus:border-[rgba(122,158,130,0.4)] focus:outline-none"
+              />
+              <div className="pointer-events-none absolute left-[12px] top-[11px] h-[20px] w-[20px]">
                 <IconImg src={recIconSearch} alt="" />
               </div>
             </div>
@@ -460,6 +479,7 @@ export default function HomePage() {
         <SearchFilterSheet
           open={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
+          onApply={(params) => setActiveFilters(params)}
         />
       </div>
     </div>

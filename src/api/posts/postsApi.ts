@@ -1,6 +1,24 @@
 import axiosInstance from "../axiosInstance";
 import type { GetPostsResponse, PostDetail, CreatePostRequest, CreatePostResponse } from "./type";
 
+export interface SearchPostsParams {
+  keyword?: string;
+  dormitoryType?: string;
+  smokingStatus?: string;
+  showerTime?: string;
+  sleepTimeType?: string;
+  sleepHabit?: string;
+}
+
+// 게시글 검색 (GET /api/posts/search)
+export async function searchPosts(params: SearchPostsParams): Promise<GetPostsResponse> {
+  const query = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+  );
+  const { data } = await axiosInstance.get<GetPostsResponse>("/api/posts/search", { params: query });
+  return data;
+}
+
 // 게시글 목록 조회 (GET /api/posts)
 export async function getPosts(): Promise<GetPostsResponse> {
   const { data } = await axiosInstance.get<GetPostsResponse>("/api/posts");
