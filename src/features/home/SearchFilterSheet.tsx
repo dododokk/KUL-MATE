@@ -1,9 +1,43 @@
 import { useState } from "react";
+import type { SearchPostsParams } from "../../api/posts/postsApi";
 
 type SearchFilterSheetProps = {
   open: boolean;
   onClose: () => void;
+  onApply: (params: SearchPostsParams) => void;
 };
+
+type FilterState = {
+  residence: string;
+  smoking: string;
+  shower: string;
+  sleep: string;
+  habit: string;
+};
+
+const INITIAL: FilterState = {
+  residence: "전체",
+  smoking: "전체",
+  shower: "전체",
+  sleep: "전체",
+  habit: "전체",
+};
+
+function toApiParams(f: FilterState): SearchPostsParams {
+  const DORM: Record<string, string> = { 레이크홀: "LAKE", 비레이크홀: "OTHER" };
+  const SMOKING: Record<string, string> = { 비흡연: "NON_SMOKER", 흡연: "SMOKER" };
+  const SHOWER: Record<string, string> = { 아침: "MORNING", 저녁: "EVENING", 밤: "NIGHT" };
+  const SLEEP: Record<string, string> = { "23시 이전": "EARLY", "1시 이후": "LATE" };
+  const HABIT: Record<string, string> = { 없음: "NONE", 보통: "SNORING", 심함: "GRINDING" };
+
+  return {
+    dormitoryType: DORM[f.residence],
+    smokingStatus: SMOKING[f.smoking],
+    showerTime: SHOWER[f.shower],
+    sleepTimeType: SLEEP[f.sleep],
+    sleepHabit: HABIT[f.habit],
+  };
+}
 
 type FilterSectionProps = {
   title: string;
@@ -37,31 +71,17 @@ function FilterSection({ title, options, selectedOption, onSelect }: FilterSecti
   );
 }
 
-export default function SearchFilterSheet({ open, onClose }: SearchFilterSheetProps) {
-  const [filters, setFilters] = useState({
-    residence: "전체",
-    smoking: "전체",
-    shower: "전체",
-    sleep: "전체",
-    habit: "전체",
-  });
+export default function SearchFilterSheet({ open, onClose, onApply }: SearchFilterSheetProps) {
+  const [filters, setFilters] = useState<FilterState>(INITIAL);
 
-  const handleFilterChange = (key: keyof typeof filters, value: string) => {
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleReset = () => {
-    setFilters({
-      residence: "전체",
-      smoking: "전체",
-      shower: "전체",
-      sleep: "전체",
-      habit: "전체",
-    });
-  };
+  const handleReset = () => setFilters(INITIAL);
 
   const handleApply = () => {
-    console.log("적용할 필터:", filters);
+    onApply(toApiParams(filters));
     onClose();
   };
 
@@ -79,48 +99,48 @@ export default function SearchFilterSheet({ open, onClose }: SearchFilterSheetPr
         </div>
 
         <div className="mt-5 max-h-[62vh] overflow-y-auto pr-1">
-          <FilterSection 
-            title="생활관" 
-            options={["전체", "레이크홀", "비레이크홀"]} 
+          <FilterSection
+            title="생활관"
+            options={["전체", "레이크홀", "비레이크홀"]}
             selectedOption={filters.residence}
             onSelect={(val) => handleFilterChange("residence", val)}
           />
-          <FilterSection 
-            title="흡연 여부" 
-            options={["전체", "비흡연", "흡연"]} 
+          <FilterSection
+            title="흡연 여부"
+            options={["전체", "비흡연", "흡연"]}
             selectedOption={filters.smoking}
             onSelect={(val) => handleFilterChange("smoking", val)}
           />
-          <FilterSection 
-            title="샤워 시간" 
-            options={["전체", "아침", "저녁"]} 
+          <FilterSection
+            title="샤워 시간"
+            options={["전체", "아침", "저녁"]}
             selectedOption={filters.shower}
             onSelect={(val) => handleFilterChange("shower", val)}
           />
-          <FilterSection 
-            title="취침 시간대" 
-            options={["전체", "23시 이전", "1시 이후"]} 
+          <FilterSection
+            title="취침 시간대"
+            options={["전체", "23시 이전", "1시 이후"]}
             selectedOption={filters.sleep}
             onSelect={(val) => handleFilterChange("sleep", val)}
           />
-          <FilterSection 
-            title="잠버릇" 
-            options={["전체", "없음", "보통", "심함"]} 
+          <FilterSection
+            title="잠버릇"
+            options={["전체", "없음", "보통", "심함"]}
             selectedOption={filters.habit}
             onSelect={(val) => handleFilterChange("habit", val)}
           />
         </div>
 
         <div className="mt-5 flex gap-3">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleReset}
             className="h-[50px] flex-1 rounded-[16px] border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#6b7280]"
           >
             초기화
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleApply}
             className="h-[50px] flex-1 rounded-[16px] bg-[#7a9e82] text-[14px] font-bold text-white"
           >

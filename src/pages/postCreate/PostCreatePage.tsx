@@ -41,7 +41,7 @@ export default function PostCreatePage() {
       if (isEditMode && postId) {
         await updatePost(postId, { title, content, visible: isPublic });
         if (isPublic !== originalVisible) {
-          await togglePostVisibility(postId);
+          await togglePostVisibility(postId, isPublic);
         }
       } else {
         await createPost({ title, content, visible: isPublic });
