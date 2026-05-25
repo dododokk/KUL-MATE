@@ -11,6 +11,9 @@ import {
 import editIcon from "../../assets/mypage/edit-mypost.svg";
 import deleteIcon from "../../assets/mypage/delete-mypost.svg";
 
+// 🌟 우리가 방금 만든 ReportPage 컴포넌트를 불러옵니다! (경로 확인 필수)
+import ReportPage from "../report/ReportPage"; 
+
 const DORM_LABELS: Record<string, string> = { LAKE: "레이크홀" };
 const SMOKING_LABELS: Record<string, string> = {
   SMOKER: "흡연",
@@ -71,6 +74,9 @@ export default function PostDetailPage() {
 
   const currentUserId = Number(localStorage.getItem("kul_userId"));
 
+  // 🌟 신고 모달을 열고 닫을 상태(State)를 추가합니다.
+  const [showReportModal, setShowReportModal] = useState(false);
+
   useEffect(() => {
     const idParam = searchParams.get("id");
     if (!idParam) return;
@@ -79,13 +85,14 @@ export default function PostDetailPage() {
     getPost(postId)
       .then((data) => {
         setPost(data);
-        setIsBookmarked(data.bookmarked);
+        setIsBookmarked(data.bookmarked); // 백엔드 응답에 맞게 수정 필요시 확인
       })
       .catch(() => setPost(null));
   }, [searchParams]);
 
   const handleBookmarkToggle = () => {
     setIsBookmarked((prev) => !prev);
+    // TODO: 북마크 API 연동 시 이곳에 추가
   };
 
   const handleDelete = async () => {
@@ -126,19 +133,47 @@ export default function PostDetailPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f8faf8] pb-28">
+    <div className="min-h-screen bg-[#f8faf8] pb-28 relative">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
-        <div className="flex w-[76px] items-center justify-start">
-          <Link
-            to="/home"
-            className="flex h-9 w-9 items-center justify-center text-[#6b7280]"
+        <Link
+          to="/home"
+          className="h-9 w-9 text-center leading-9 text-[#6b7280]"
+        >
+          <img
+            src={recIconBack}
+            alt="뒤로가기 아이콘"
+            className="h-6 w-6 object-contain"
+          />
+        </Link>
+        <h1 className="text-[14px] font-bold text-[#111827]">구인글 상세</h1>
+
+        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
+          <button
+            type="button"
+            onClick={handleBookmarkToggle}
+            className="flex h-9 w-9 items-center justify-center"
+            aria-label="북마크"
+          >
+            <img
+              src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
+              alt="북마크"
+              className="block h-[20px] w-[20px]"
+              draggable={false}
+            />
+          </button>
+          
+          {/* 🌟 기존 <Link>를 <button>으로 변경하여 모달을 띄우도록 수정! */}
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
+            className="flex h-9 w-9 items-center justify-center"
           >
             <img
               src={recIconBack}
               alt="뒤로가기 아이콘"
               className="h-6 w-6 object-contain"
             />
-          </Link>
+          </button>
         </div>
         <h1 className="flex h-9 items-center text-[14px] font-bold text-[#111827]">
           구인글 상세
@@ -214,9 +249,9 @@ export default function PostDetailPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-[16px] font-black text-[#111827]">
-                  {post?.author.nickname ?? "-"}
+                  {post?.author?.nickname ?? "-"}
                 </p>
-                {post?.author.gender && (
+                {post?.author?.gender && (
                   <span className="rounded-full bg-[#eff6ff] px-2 py-[2px] text-[12px] font-semibold text-[#60a5fa]">
                     {post.author.gender === "MALE" ? "남" : "여"}
                   </span>
@@ -247,10 +282,10 @@ export default function PostDetailPage() {
           <h2 className="text-[16px] font-bold text-[#111827]">
             {post?.title ?? "-"}
           </h2>
-          <p className="mt-2 text-[14px] leading-[22.75px] text-[#4b5563]">
+          <p className="mt-2 text-[14px] leading-[22.75px] text-[#4b5563] whitespace-pre-wrap">
             {post?.content ?? ""}
           </p>
-          {post && post.tags.length > 0 && (
+          {post && post.tags?.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-[6px]">
               {post.tags.map((tag) => (
                 <span
@@ -309,7 +344,7 @@ export default function PostDetailPage() {
         </section>
 
         <p className="px-1 text-right text-[12px] text-[#9ca3af]">
-          {post ? `${post.createdAt.slice(0, 10)} 작성` : ""}
+          {post ? `${post.createdAt?.slice(0, 10)} 작성` : ""}
         </p>
       </main>
 
@@ -323,6 +358,15 @@ export default function PostDetailPage() {
           </button>
         </div>
       </footer>
+
+      {/* 🌟 신고 모달 렌더링 (showReportModal이 true일 때만 보임) */}
+      {showReportModal && (
+        <ReportPage
+          targetType="POST"
+          targetId={Number(searchParams.get("id"))} // URL 파라미터에서 가져온 글 번호를 그대로 넘겨줍니다.
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
     </div>
   );
 }
