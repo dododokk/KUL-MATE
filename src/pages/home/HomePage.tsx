@@ -203,13 +203,11 @@ export default function HomePage() {
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  // 추후 알림 API와 연동할 수 있도록 남겨둡니다.
   const hasAlarm = true; 
   
   const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
   
-  // API 결과와 로딩 상태를 관리합니다.
   const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -219,7 +217,6 @@ export default function HomePage() {
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
 
-  // 탭 변경 시 적절한 API 호출
   useEffect(() => {
     const fetchPosts = async () => {
       setIsLoading(true);
@@ -246,10 +243,10 @@ export default function HomePage() {
 
   const dormLabel = (type: string) => {
     if (type === "LAKE") return "레이크홀";
-    return type; // 기획에 따라 추가 기숙사가 있다면 여기에 추가
+    return type; 
   };
 
-  // API 데이터를 UI에서 사용하는 구조(RoommatePost)로 변환
+  // ✅ 사용하지 않는 변수들을 제거하고 이 posts 로 통합했습니다!
   const posts: RoommatePost[] = useMemo(
     () =>
       apiPosts.map((p) => {
@@ -261,8 +258,8 @@ export default function HomePage() {
           majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
           dormLabel: dormLabel(p.dormitoryType),
           title: p.title,
-          sleepTime: `${p.sleepStartTime} - ${p.sleepEndTime}`,
-          wakeTime: `${p.wakeUpStartTime} - ${p.wakeUpEndTime}`,
+          sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
+          wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
           bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
           tags: p.tags?.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })) || [],
           date: p.createdAt.slice(0, 10),
