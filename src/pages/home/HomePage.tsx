@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getPosts } from "../../api/posts/postsApi";
+import { Link, useNavigate } from "react-router-dom";
+import { getPosts, getRecommendations } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
 import {
@@ -200,59 +200,75 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const hasAlarm = true; // 읽지 않은 알림이 있으면 true
+  
+  const hasAlarm = true; 
+  
   const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
+  
+  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getPreferenceSurveyStatus()
       .then((res) => setIsPreferenceSurveyCompleted(res.completed))
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
-  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
-  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
 
   useEffect(() => {
-    if (activeTab !== "all") return;
-    getPosts().then(setApiPosts).catch(() => setApiPosts([]));
-  }, [activeTab, location.key]);
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      try {
+        if (activeTab === "all") {
+          const data = await getPosts();
+          setApiPosts(data);
+        } else {
+          const data = await getRecommendations();
+          setApiPosts(data);
+        }
+      } catch (err) {
+        console.error("데이터를 불러오는 중 오류 발생:", err);
+        setApiPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [activeTab]);
 
   const pillBgs = [recPill1, recPill2, recPill3, recPill4];
 
   const dormLabel = (type: string) => {
     if (type === "LAKE") return "레이크홀";
-    return type;
+    return type; 
   };
 
-  const allPosts: RoommatePost[] = useMemo(
+  // ✅ 사용하지 않는 변수들을 제거하고 이 posts 로 통합했습니다!
+  const posts: RoommatePost[] = useMemo(
     () =>
-      apiPosts.map((p) => ({
-        id: String(p.postId),
-        nickname: p.authorNickname,
-        majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
-        dormLabel: dormLabel(p.dormitoryType),
-        title: p.title,
-        sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
-        wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
-        bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
-        tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
-        date: p.createdAt.slice(0, 10),
-      })),
-    [apiPosts],
+      apiPosts.map((p) => {
+        const scoreTone = p.matchScore && p.matchScore >= 90 ? "primary" : "mint";
+        
+        return {
+          id: String(p.postId),
+          nickname: p.authorNickname,
+          majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
+          dormLabel: dormLabel(p.dormitoryType),
+          title: p.title,
+          sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
+          wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
+          bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
+          tags: p.tags?.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })) || [],
+          date: p.createdAt.slice(0, 10),
+          score: activeTab === "recommended" && p.matchScore ? `${p.matchScore}점` : undefined,
+          scoreTone: activeTab === "recommended" && p.matchScore ? scoreTone : undefined,
+        };
+      }),
+    [apiPosts, activeTab]
   );
-
-  const recommendedPosts = useMemo(
-    () =>
-      allPosts.slice(0, 2).map((post, idx) => ({
-        ...post,
-        score: idx === 0 ? "92점" : "78점",
-        scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
-      })),
-    [allPosts],
-  );
-  const posts = activeTab === "recommended" ? recommendedPosts : allPosts;
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -437,6 +453,14 @@ export default function HomePage() {
                 </svg>
                 바로가기
               </button>
+            </div>
+          ) : isLoading ? (
+            <div className="flex w-full justify-center py-10">
+              <span className="text-sm text-gray-400">데이터를 불러오는 중...</span>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="flex w-full justify-center py-10">
+              <span className="text-sm text-gray-400">등록된 구인글이 없습니다.</span>
             </div>
           ) : (
             posts.map((p) => (
