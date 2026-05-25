@@ -9,6 +9,9 @@ import {
   recIconReport,
 } from "../../assets/figma/home";
 
+// 🌟 우리가 방금 만든 ReportPage 컴포넌트를 불러옵니다! (경로 확인 필수)
+import ReportPage from "../report/ReportPage"; 
+
 const DORM_LABELS: Record<string, string> = { LAKE: "레이크홀" };
 const SMOKING_LABELS: Record<string, string> = {
   SMOKER: "흡연",
@@ -65,6 +68,9 @@ export default function PostDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
 
+  // 🌟 신고 모달을 열고 닫을 상태(State)를 추가합니다.
+  const [showReportModal, setShowReportModal] = useState(false);
+
   useEffect(() => {
     const idParam = searchParams.get("id");
     if (!idParam) return;
@@ -73,13 +79,14 @@ export default function PostDetailPage() {
     getPost(postId)
       .then((data) => {
         setPost(data);
-        setIsBookmarked(data.bookmarked);
+        setIsBookmarked(data.bookmarked); // 백엔드 응답에 맞게 수정 필요시 확인
       })
       .catch(() => setPost(null));
   }, [searchParams]);
 
   const handleBookmarkToggle = () => {
     setIsBookmarked((prev) => !prev);
+    // TODO: 북마크 API 연동 시 이곳에 추가
   };
 
   const lifestyle = post?.lifestyle;
@@ -98,7 +105,7 @@ export default function PostDetailPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f8faf8] pb-28">
+    <div className="min-h-screen bg-[#f8faf8] pb-28 relative">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
         <Link
           to="/home"
@@ -126,8 +133,11 @@ export default function PostDetailPage() {
               draggable={false}
             />
           </button>
-          <Link
-            to="/report"
+          
+          {/* 🌟 기존 <Link>를 <button>으로 변경하여 모달을 띄우도록 수정! */}
+          <button
+            type="button"
+            onClick={() => setShowReportModal(true)}
             className="flex h-9 w-9 items-center justify-center"
           >
             <img
@@ -135,7 +145,7 @@ export default function PostDetailPage() {
               alt="신고하기 아이콘"
               className="h-6 w-6 object-contain"
             />
-          </Link>
+          </button>
         </div>
       </header>
 
@@ -149,9 +159,9 @@ export default function PostDetailPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-[16px] font-black text-[#111827]">
-                  {post?.author.nickname ?? "-"}
+                  {post?.author?.nickname ?? "-"}
                 </p>
-                {post?.author.gender && (
+                {post?.author?.gender && (
                   <span className="rounded-full bg-[#eff6ff] px-2 py-[2px] text-[12px] font-semibold text-[#60a5fa]">
                     {post.author.gender === "MALE" ? "남" : "여"}
                   </span>
@@ -182,10 +192,10 @@ export default function PostDetailPage() {
           <h2 className="text-[16px] font-bold text-[#111827]">
             {post?.title ?? "-"}
           </h2>
-          <p className="mt-2 text-[14px] leading-[22.75px] text-[#4b5563]">
+          <p className="mt-2 text-[14px] leading-[22.75px] text-[#4b5563] whitespace-pre-wrap">
             {post?.content ?? ""}
           </p>
-          {post && post.tags.length > 0 && (
+          {post && post.tags?.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-[6px]">
               {post.tags.map((tag) => (
                 <span
@@ -244,7 +254,7 @@ export default function PostDetailPage() {
         </section>
 
         <p className="px-1 text-right text-[12px] text-[#9ca3af]">
-          {post ? `${post.createdAt.slice(0, 10)} 작성` : ""}
+          {post ? `${post.createdAt?.slice(0, 10)} 작성` : ""}
         </p>
       </main>
 
@@ -258,6 +268,15 @@ export default function PostDetailPage() {
           </button>
         </div>
       </footer>
+
+      {/* 🌟 신고 모달 렌더링 (showReportModal이 true일 때만 보임) */}
+      {showReportModal && (
+        <ReportPage
+          targetType="POST"
+          targetId={Number(searchParams.get("id"))} // URL 파라미터에서 가져온 글 번호를 그대로 넘겨줍니다.
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
     </div>
   );
 }
