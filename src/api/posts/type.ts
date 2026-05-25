@@ -49,6 +49,16 @@ export interface PostLifestyle {
   homeVisitFrequency: string;
 }
 
+export interface CreatePostRequest {
+  title: string;
+  content: string;
+  visible: boolean;
+}
+
+export interface CreatePostResponse {
+  postId: number;
+}
+
 export interface PostDetail {
   postId: number;
   title: string;

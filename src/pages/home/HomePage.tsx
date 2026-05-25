@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getPosts } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
@@ -200,6 +200,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const hasAlarm = true; // 읽지 않은 알림이 있으면 true
@@ -216,7 +217,7 @@ export default function HomePage() {
   useEffect(() => {
     if (activeTab !== "all") return;
     getPosts().then(setApiPosts).catch(() => setApiPosts([]));
-  }, [activeTab]);
+  }, [activeTab, location.key]);
 
   const pillBgs = [recPill1, recPill2, recPill3, recPill4];
 
@@ -233,8 +234,8 @@ export default function HomePage() {
         majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
         dormLabel: dormLabel(p.dormitoryType),
         title: p.title,
-        sleepTime: `${p.sleepStartTime} - ${p.sleepEndTime}`,
-        wakeTime: `${p.wakeUpStartTime} - ${p.wakeUpEndTime}`,
+        sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
+        wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
         bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
         tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
         date: p.createdAt.slice(0, 10),
