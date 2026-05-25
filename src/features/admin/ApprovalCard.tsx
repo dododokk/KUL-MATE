@@ -1,4 +1,5 @@
 import type { ApprovalItem } from "./adminDummyData";
+import { adminApi } from "../../api/admin/adminApi"; // ✨ 경로 확인 필요
 import usersIcon from "../../assets/admin/users.svg";
 import documentIcon from "../../assets/admin/document.svg";
 
@@ -13,6 +14,18 @@ export default function ApprovalCard({
   onApprove,
   onReject,
 }: ApprovalCardProps) {
+  
+  // ✨ 합격증 보기 API 연결
+  const handleViewCertificate = async () => {
+    try {
+      const response = await adminApi.getCertificate(Number(item.id));
+      const fileUrl = window.URL.createObjectURL(new Blob([response.data]));
+      window.open(fileUrl, "_blank");
+    } catch (error) {
+      alert("합격증을 불러오지 못했습니다.");
+    }
+  };
+
   return (
     <div className="backdrop-blur-sm bg-white/70 border border-[rgba(122,158,130,0.1)] rounded-2xl p-[17px] w-full">
       <div className="flex gap-3 items-center mb-3">
@@ -54,6 +67,7 @@ export default function ApprovalCard({
           </div>
           <button
             type="button"
+            onClick={handleViewCertificate} // ✨ 클릭 이벤트 연결
             className="text-xs font-semibold text-[#7a9e82] shrink-0"
           >
             보기
