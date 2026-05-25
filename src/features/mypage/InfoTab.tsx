@@ -83,14 +83,14 @@ export default function InfoTab({
                     {roommate.nickname}
                   </span>
                   <span className="bg-[rgba(122,158,130,0.1)] px-[8px] py-[2px] rounded-full font-bold text-[#7a9e82] text-[12px] leading-[16px]">
-                    {roommate.score}점
+                    {roommate.matchScore}점
                   </span>
                 </div>
                 <span className="font-normal text-[#6b7280] text-[12px] leading-[16px]">
-                  {roommate.department} {roommate.year}
+                  {roommate.department} {roommate.dormitoryType}
                 </span>
                 <span className="font-normal text-[#9ca3af] text-[12px] leading-[16px]">
-                  {roommate.dorm} · {roommate.matchDate} 매칭
+                  {roommate.dormitoryType} · {roommate.statusLabel} 매칭
                 </span>
               </div>
             </div>
