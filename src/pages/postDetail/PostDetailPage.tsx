@@ -7,6 +7,7 @@ import {
   removeBookmark,
 } from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
+import { getOrCreateChatRoom } from "../../api/chat/chatApi";
 import {
   recIconBookmarkActive,
   recIconBookmarkMuted,
@@ -74,6 +75,7 @@ export default function PostDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const currentUserId = Number(localStorage.getItem("kul_userId"));
@@ -321,9 +323,33 @@ export default function PostDetailPage() {
 
       <footer className="fixed bottom-0 left-0 w-full border-t border-[#f3f4f6] bg-white px-5 pb-8 pt-[13px]">
         <div className="flex gap-3">
-          <button className="h-12 flex-1 rounded-[12px] bg-[rgba(122,158,130,0.1)] text-[14px] font-bold text-[#7a9e82]">
-            채팅하기
-          </button>
+          {!isMyPost && (
+            <button
+              type="button"
+              disabled={isChatLoading || !post}
+              onClick={async () => {
+                if (!post) return;
+                setIsChatLoading(true);
+                try {
+                  const room = await getOrCreateChatRoom(post.postId);
+                  navigate(`/chat/${room.roomId}`, {
+                    state: {
+                      opponentNickname: room.opponentNickname,
+                      matchScore: room.matchScore,
+                      dormitoryType: room.dormitoryType,
+                    },
+                  });
+                } catch {
+                  alert("채팅방을 열 수 없습니다. 다시 시도해주세요.");
+                } finally {
+                  setIsChatLoading(false);
+                }
+              }}
+              className="h-12 flex-1 rounded-[12px] bg-[rgba(122,158,130,0.1)] text-[14px] font-bold text-[#7a9e82] disabled:opacity-50"
+            >
+              {isChatLoading ? "연결 중..." : "채팅하기"}
+            </button>
+          )}
           <button className="h-12 flex-1 rounded-[12px] bg-[#7a9e82] text-[14px] font-bold text-white">
             룸메이트 신청
           </button>

@@ -1,73 +1,24 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { getChatMessages } from "../../api/chat/chatApi";
+import { connectStomp, sendChatMessage } from "../../api/chat/stompClient";
+import type { ChatMessage, StompChatMessage } from "../../api/chat/type";
 import RoommateRequestModal from "../../features/chat/RoommateRequestModal";
 import sendIcon from "../../assets/chat/send.svg";
 import profileIcon from "../../assets/chat/profile.svg";
 
-type Message = {
-  id: string;
-  text: string;
-  time: string;
-  isOwn: boolean;
+type RoomState = {
+  opponentNickname?: string;
+  matchScore?: number;
+  dormitoryType?: string;
 };
 
-const MESSAGES: Message[] = [
-  {
-    id: "1",
-    text: "안녕하세요! 구인글 보고 연락드려요 😊",
-    time: "오후 2:10",
-    isOwn: false,
-  },
-  { id: "2", text: "안녕하세요! 반갑습니다 :)", time: "오후 2:11", isOwn: true },
-  {
-    id: "3",
-    text: "혹시 취침 시간이 몇 시쯤 되시나요?",
-    time: "오후 2:12",
-    isOwn: false,
-  },
-  {
-    id: "4",
-    text: "보통 밤 11시~12시 사이에 자요. 굉장히 규칙적인 편이에요!",
-    time: "오후 2:13",
-    isOwn: true,
-  },
-  {
-    id: "5",
-    text: "오, 저랑 비슷하네요! 저도 보통 11:30쯤 자거든요 ㅎㅎ",
-    time: "오후 2:14",
-    isOwn: false,
-  },
-  { id: "6", text: "흡연하시나요?", time: "오후 2:15", isOwn: false },
-  { id: "7", text: "아니요, 비흡연자예요!", time: "오후 2:15", isOwn: true },
-  {
-    id: "8",
-    text: "저도 비흡연이에요 😊 좋네요!",
-    time: "오후 2:16",
-    isOwn: false,
-  },
-  {
-    id: "9",
-    text: "청소는 얼마나 자주 하시나요?",
-    time: "오후 2:18",
-    isOwn: true,
-  },
-  {
-    id: "10",
-    text: "주 1-2회 정도 하는 편이에요. 청결에 꽤 신경 쓰는 편!",
-    time: "오후 2:19",
-    isOwn: false,
-  },
-  {
-    id: "11",
-    text: "안녕하세요! 혹시 흡연하시나요?",
-    time: "오후 3:24",
-    isOwn: false,
-  },
-];
-
-const USER_NAME = "코딩고수민준";
-const MATCH_SCORE = 92;
-const LOCATION = "비레이크";
+function formatMessageTime(isoString: string): string {
+  const date = new Date(isoString);
+  const h = date.getHours();
+  const m = date.getMinutes().toString().padStart(2, "0");
+  return `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${m}`;
+}
 
 function OtherAvatar({ size = 28 }: { size?: number }) {
   return (
@@ -85,19 +36,95 @@ function OtherAvatar({ size = 28 }: { size?: number }) {
 }
 
 export default function ChatDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const roomId = Number(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state ?? {}) as RoomState;
+
+  const currentUserId = Number(localStorage.getItem("kul_userId"));
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [inputText, setInputText] = useState("");
   const [modal, setModal] = useState<"none" | "confirm" | "success">("none");
   const [isRequested, setIsRequested] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const opponentNickname =
+    state.opponentNickname ??
+    messages.find((m) => m.senderId !== currentUserId)?.senderNickname ??
+    "상대방";
+  const matchScore =
+    state.matchScore ??
+    messages.find((m) => m.senderId !== currentUserId)?.matchScore ??
+    0;
+  const dormitoryType =
+    state.dormitoryType ??
+    messages.find((m) => m.senderId !== currentUserId)?.dormitoryType ??
+    "";
+
+  useEffect(() => {
+    if (!roomId) return;
+    setIsLoading(true);
+    getChatMessages(roomId)
+      .then((data) => setMessages(data))
+      .catch(() => setMessages([]))
+      .finally(() => setIsLoading(false));
+
+    const client = connectStomp(() => {
+      client.subscribe(`/topic/chats/rooms/${roomId}`, (frame) => {
+        try {
+          const incoming: StompChatMessage = JSON.parse(frame.body);
+          setMessages((prev) => [
+            ...prev,
+            {
+              messageId: incoming.messageId,
+              roomId: incoming.roomId,
+              senderId: incoming.senderId,
+              senderNickname: incoming.senderNickname,
+              matchScore: incoming.matchScore,
+              dormitoryType: incoming.dormitoryType,
+              content: incoming.content,
+              sentAt: incoming.createdAt,
+            },
+          ]);
+        } catch {}
+      });
+    });
+
+    return () => {
+      client.deactivate();
+    };
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      bottomRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [isLoading, messages]);
+
+  function handleSend() {
+    const text = inputText.trim();
+    if (!text) return;
+
+    setInputText("");
+    sendChatMessage(roomId, text);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
 
   function handleRequestConfirm() {
     setModal("success");
   }
 
   function handleModalClose() {
-    if (modal === "success") {
-      setIsRequested(true);
-    }
+    if (modal === "success") setIsRequested(true);
     setModal("none");
   }
 
@@ -109,7 +136,7 @@ export default function ChatDetailPage() {
           "linear-gradient(160deg, rgb(240, 250, 244) 0%, rgb(255, 255, 255) 80%)",
       }}
     >
-      {/* Header */}
+      {/* 헤더 */}
       <div className="flex-none backdrop-blur-[6px] bg-[rgba(255,255,255,0.92)] border-b border-[rgba(122,158,130,0.1)] flex gap-[12px] items-center h-[109px] pb-[13px] pt-[56px] px-[16px]">
         <button
           className="flex items-center justify-center shrink-0 size-[36px]"
@@ -129,12 +156,14 @@ export default function ChatDetailPage() {
         <OtherAvatar size={40} />
 
         <div className="flex flex-col flex-1 min-w-0">
-          <p className="font-bold text-[#111827] text-[14px] leading-[20px]">
-            {USER_NAME}
+          <p className="font-bold text-[#111827] text-[14px] leading-[20px] truncate">
+            {opponentNickname}
           </p>
-          <p className="font-semibold text-[#7a9e82] text-[12px] leading-[16px]">
-            매칭점수 {MATCH_SCORE}점
-          </p>
+          {matchScore > 0 && (
+            <p className="font-semibold text-[#7a9e82] text-[12px] leading-[16px]">
+              매칭점수 {matchScore}점
+            </p>
+          )}
         </div>
 
         <button className="flex items-center justify-center shrink-0 size-[36px]">
@@ -146,30 +175,31 @@ export default function ChatDetailPage() {
         </button>
       </div>
 
-      {/* Scrollable content */}
+      {/* 스크롤 영역 */}
       <div className="flex-1 overflow-y-auto">
-        {/* Profile card */}
+        {/* 프로필 카드 */}
         <div className="px-[16px] pt-[12px]">
           <div className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] flex gap-[12px] items-center p-[13px] rounded-[16px] h-[66px]">
             <div className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center rounded-full shrink-0 size-[40px]">
-              <img src={profileIcon} alt="프로필" className="w-[22px] h-[22px]" />
+              <img
+                src={profileIcon}
+                alt="프로필"
+                className="w-[22px] h-[22px]"
+              />
             </div>
-
             <div className="flex flex-col min-w-0 flex-1">
               <p className="font-bold text-[#1f2937] text-[12px] leading-[16px] truncate">
-                {USER_NAME}
+                {opponentNickname}
               </p>
               <p className="font-normal text-[#9ca3af] text-[12px] leading-[16px] truncate">
-                {LOCATION}
+                {dormitoryType}
               </p>
             </div>
-
             <button className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center h-[28px] px-[10px] py-[6px] rounded-[12px] shrink-0">
               <span className="font-bold text-[#7a9e82] text-[12px] leading-[16px]">
                 프로필 보기
               </span>
             </button>
-
             {isRequested ? (
               <button className="bg-[#f3f4f6] flex items-center justify-center h-[28px] px-[10px] py-[6px] rounded-[12px] shrink-0">
                 <span className="font-bold text-[#9ca3af] text-[12px] leading-[16px]">
@@ -189,68 +219,89 @@ export default function ChatDetailPage() {
           </div>
         </div>
 
-        {/* Messages */}
+        {/* 메시지 목록 */}
         <div className="flex flex-col px-[16px] py-[12px]">
-          {MESSAGES.map((msg, idx) => (
-            <div
-              key={msg.id}
-              className={`flex ${
-                msg.isOwn ? "justify-end" : "gap-[8px] items-end"
-              } ${idx > 0 ? "pt-[12px]" : ""}`}
-            >
-              {!msg.isOwn && (
-                <div className="flex items-end pb-[2px] shrink-0">
-                  <OtherAvatar size={28} />
-                </div>
-              )}
-
-              <div
-                className={`flex flex-col gap-[2px] max-w-[257px] ${
-                  msg.isOwn ? "items-end" : "items-start"
-                }`}
-              >
+          {isLoading ? (
+            <div className="flex justify-center py-[48px]">
+              <div className="h-[24px] w-[24px] animate-spin rounded-full border-2 border-[#7a9e82] border-t-transparent" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center py-[48px] gap-[8px]">
+              <p className="text-[14px] font-semibold text-[#374151]">
+                아직 대화가 없어요
+              </p>
+              <p className="text-[12px] text-[#9ca3af]">
+                먼저 인사를 건네보세요!
+              </p>
+            </div>
+          ) : (
+            messages.map((msg, idx) => {
+              const isOwn = msg.senderId === currentUserId;
+              return (
                 <div
-                  className={
-                    msg.isOwn
-                      ? "px-[16px] py-[10px] rounded-tl-[16px] rounded-tr-[6px] rounded-bl-[16px] rounded-br-[16px]"
-                      : "bg-[rgba(255,255,255,0.8)] border border-[rgba(122,158,130,0.1)] px-[17px] py-[11px] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[16px] rounded-bl-[6px]"
-                  }
-                  style={
-                    msg.isOwn
-                      ? {
-                          backgroundImage:
-                            "linear-gradient(166deg, rgb(122,158,130) 0%, rgb(96,126,104) 100%)",
-                        }
-                      : undefined
-                  }
+                  key={msg.messageId}
+                  className={`flex ${isOwn ? "justify-end" : "gap-[8px] items-end"} ${
+                    idx > 0 ? "pt-[12px]" : ""
+                  }`}
                 >
-                  <p
-                    className={`text-[14px] leading-[22.75px] ${
-                      msg.isOwn ? "text-white" : "text-[#1f2937]"
+                  {!isOwn && (
+                    <div className="flex items-end pb-[2px] shrink-0">
+                      <OtherAvatar size={28} />
+                    </div>
+                  )}
+                  <div
+                    className={`flex flex-col gap-[2px] max-w-[257px] ${
+                      isOwn ? "items-end" : "items-start"
                     }`}
                   >
-                    {msg.text}
-                  </p>
+                    <div
+                      className={
+                        isOwn
+                          ? "px-[16px] py-[10px] rounded-tl-[16px] rounded-tr-[6px] rounded-bl-[16px] rounded-br-[16px]"
+                          : "bg-[rgba(255,255,255,0.8)] border border-[rgba(122,158,130,0.1)] px-[17px] py-[11px] rounded-tl-[16px] rounded-tr-[16px] rounded-br-[16px] rounded-bl-[6px]"
+                      }
+                      style={
+                        isOwn
+                          ? {
+                              backgroundImage:
+                                "linear-gradient(166deg, rgb(122,158,130) 0%, rgb(96,126,104) 100%)",
+                            }
+                          : undefined
+                      }
+                    >
+                      <p
+                        className={`text-[14px] leading-[22.75px] ${
+                          isOwn ? "text-white" : "text-[#1f2937]"
+                        }`}
+                      >
+                        {msg.content}
+                      </p>
+                    </div>
+                    <span className="text-[#9ca3af] text-[12px] leading-[16px] px-[4px]">
+                      {formatMessageTime(msg.sentAt)}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[#9ca3af] text-[12px] leading-[16px] px-[4px]">
-                  {msg.time}
-                </span>
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
+          <div ref={bottomRef} />
         </div>
       </div>
 
-      {/* Message input bar */}
+      {/* 입력창 */}
       <div className="flex-none backdrop-blur-[6px] bg-[rgba(255,255,255,0.92)] border-t border-[rgba(122,158,130,0.1)] flex gap-[8px] items-end h-[69px] pb-[12px] pt-[13px] px-[16px]">
         <textarea
           className="bg-white border border-[#e5e7eb] flex-1 h-[44px] max-h-[96px] overflow-hidden px-[17px] py-[11px] rounded-[16px] text-[14px] leading-[20px] placeholder:text-[#9ca3af] resize-none focus:outline-none"
           placeholder="메시지를 입력하세요..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={handleKeyDown}
           rows={1}
         />
         <button
+          onClick={handleSend}
+          disabled={!inputText.trim()}
           className={`flex items-center justify-center rounded-[16px] shrink-0 size-[44px] transition-colors ${
             inputText.trim() ? "bg-[#7a9e82]" : "bg-[#f3f4f6]"
           }`}
@@ -259,10 +310,9 @@ export default function ChatDetailPage() {
         </button>
       </div>
 
-      {/* Modals */}
       {modal !== "none" && (
         <RoommateRequestModal
-          userName={USER_NAME}
+          userName={opponentNickname}
           mode={modal}
           onConfirm={handleRequestConfirm}
           onClose={handleModalClose}
