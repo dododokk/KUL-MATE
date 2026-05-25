@@ -4,6 +4,8 @@ import LoginPage from "../pages/login/LoginPage";
 import OnboardingPage from "../pages/onboarding/OnboardingPage";
 import PostCreatePage from "../pages/postCreate/PostCreatePage";
 import PostDetailPage from "../pages/postDetail/PostDetailPage";
+import ReportPage from "../pages/report/ReportPage";
+import SearchPage from "../pages/search/SearchPage";
 import SignUpPage from "../pages/signUp/SignUpPage";
 import SplashPage from "../pages/splash/SplashPage";
 import SurveyPage from "../pages/survey/SurveyPage";
@@ -26,6 +28,8 @@ export default function AppRouter() {
         <Route path="/chat/:id" element={<ChatDetailPage />} />
         <Route path="/post/detail" element={<PostDetailPage />} />
         <Route path="/post/create" element={<PostCreatePage />} />
+        <Route path="/report" element={<ReportPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />

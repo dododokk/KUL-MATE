@@ -8,8 +8,8 @@ import SavedPostList from "../../features/mypage/SavedPostList";
 import type { MyPageTab, MyPost, RoommateInfo, SavedPost, UserProfile } from "../../features/mypage/types";
 
 // 방금 만든 실제 API 함수들을 가져옵니다. (경로는 프로젝트 구조에 맞게 살짝 조절해주세요)
-import { getMyPageSummary, getMyPosts, getSavedPosts } from "../../api/mypage/mypageApi";
-import { deletePost, togglePostVisibility } from "../../api/posts/postsApi";
+import { getMyPageSummary, getMyPosts } from "../../api/mypage/mypageApi";
+import { deletePost, togglePostVisibility, getBookmarkedPosts, addBookmark, removeBookmark } from "../../api/posts/postsApi";
 import profileIcon from "../../assets/mypage/profile.svg";
 import settingIcon from "../../assets/mypage/setting.svg";
 import noticeIcon from "../../assets/mypage/notice.svg";
@@ -73,7 +73,7 @@ export default function MyPage() {
         const [summaryData, postsData, savedData] = await Promise.all([
           getMyPageSummary(),
           getMyPosts(),
-          getSavedPosts(),
+          getBookmarkedPosts(),
         ]);
 
         setUser(summaryData);
@@ -106,17 +106,37 @@ export default function MyPage() {
   }
 
   async function handleTogglePublic(id: number) {
+    const post = posts.find((p) => p.postId === id);
+    if (!post) return;
     try {
-      await togglePostVisibility(id);
-      setPosts((prev) => prev.map((p) => (p.postId === id ? { ...p, visible: !p.visible } : p)));
+      const newVisible = !post.visible;
+      await togglePostVisibility(id, newVisible);
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.postId === id
+            ? { ...p, visible: newVisible, visibilityLabel: newVisible ? "공개" : "비공개" }
+            : p
+        )
+      );
     } catch {
       alert("공개 설정 변경에 실패했습니다. 다시 시도해주세요.");
     }
   }
 
-  function handleToggleBookmark(id: number) {
-    // API 연결 후에는 DELETE/POST /api/posts/{postId}/bookmark API 호출 필요
-    setSaved((prev) => prev.map((s) => (s.postId === id ? { ...s, bookmarked: !s.bookmarked } : s)));
+  async function handleToggleBookmark(id: number) {
+    const post = saved.find((s) => s.postId === id);
+    if (!post) return;
+    try {
+      if (post.bookmarked) {
+        await removeBookmark(id);
+        setSaved((prev) => prev.filter((s) => s.postId !== id));
+      } else {
+        await addBookmark(id);
+        setSaved((prev) => prev.map((s) => (s.postId === id ? { ...s, bookmarked: true } : s)));
+      }
+    } catch {
+      alert("북마크 처리에 실패했습니다. 다시 시도해주세요.");
+    }
   }
 
   // 1. 로딩 상태 뷰 (NFR-001 요구사항 반영)
@@ -220,7 +240,7 @@ export default function MyPage() {
           {[
             { key: "info" as const, label: "정보" },
             { key: "posts" as const, label: "내 글" },
-            { key: "saved" as const, label: `저장 (${user.counts.bookmarkCount})` },
+            { key: "saved" as const, label: `저장 (${saved.length})` },
           ].map((tab) => (
             <button
               key={tab.key}

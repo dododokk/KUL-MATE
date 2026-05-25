@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { getPost, deletePost } from "../../api/posts/postsApi";
+import {
+  getPost,
+  deletePost,
+  addBookmark,
+  removeBookmark,
+} from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
 import {
   recIconBookmarkActive,
@@ -10,9 +15,7 @@ import {
 } from "../../assets/figma/home";
 import editIcon from "../../assets/mypage/edit-mypost.svg";
 import deleteIcon from "../../assets/mypage/delete-mypost.svg";
-
-// 🌟 우리가 방금 만든 ReportPage 컴포넌트를 불러옵니다! (경로 확인 필수)
-import ReportPage from "../report/ReportPage"; 
+import ReportPage from "../report/ReportPage";
 
 const DORM_LABELS: Record<string, string> = { LAKE: "레이크홀" };
 const SMOKING_LABELS: Record<string, string> = {
@@ -71,11 +74,9 @@ export default function PostDetailPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const currentUserId = Number(localStorage.getItem("kul_userId"));
-
-  // 🌟 신고 모달을 열고 닫을 상태(State)를 추가합니다.
-  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const idParam = searchParams.get("id");
@@ -90,9 +91,18 @@ export default function PostDetailPage() {
       .catch(() => setPost(null));
   }, [searchParams]);
 
-  const handleBookmarkToggle = () => {
-    setIsBookmarked((prev) => !prev);
-    // TODO: 북마크 API 연동 시 이곳에 추가
+  const handleBookmarkToggle = async () => {
+    if (!post) return;
+    try {
+      if (isBookmarked) {
+        await removeBookmark(post.postId);
+      } else {
+        await addBookmark(post.postId);
+      }
+      setIsBookmarked((prev) => !prev);
+    } catch {
+      alert("북마크 처리에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const handleDelete = async () => {
@@ -133,48 +143,21 @@ export default function PostDetailPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f8faf8] pb-28 relative">
+    <div className="min-h-screen bg-[#f8faf8] pb-28">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
-        <Link
-          to="/home"
-          className="h-9 w-9 text-center leading-9 text-[#6b7280]"
-        >
-          <img
-            src={recIconBack}
-            alt="뒤로가기 아이콘"
-            className="h-6 w-6 object-contain"
-          />
-        </Link>
-        <h1 className="text-[14px] font-bold text-[#111827]">구인글 상세</h1>
-
-        <div className="flex w-[76px] items-center justify-end gap-1 text-[#9ca3af]">
-          <button
-            type="button"
-            onClick={handleBookmarkToggle}
-            className="flex h-9 w-9 items-center justify-center"
-            aria-label="북마크"
-          >
-            <img
-              src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
-              alt="북마크"
-              className="block h-[20px] w-[20px]"
-              draggable={false}
-            />
-          </button>
-          
-          {/* 🌟 기존 <Link>를 <button>으로 변경하여 모달을 띄우도록 수정! */}
-          <button
-            type="button"
-            onClick={() => setShowReportModal(true)}
-            className="flex h-9 w-9 items-center justify-center"
+        <div className="flex w-[76px] items-center justify-start">
+          <Link
+            to="/home"
+            className="flex h-9 w-9 items-center justify-center text-[#6b7280]"
           >
             <img
               src={recIconBack}
               alt="뒤로가기 아이콘"
               className="h-6 w-6 object-contain"
             />
-          </button>
+          </Link>
         </div>
+
         <h1 className="flex h-9 items-center text-[14px] font-bold text-[#111827]">
           구인글 상세
         </h1>
@@ -187,11 +170,7 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center"
                 aria-label="수정"
               >
-                <img
-                  src={editIcon}
-                  alt="수정"
-                  className="h-4 w-4 object-contain"
-                />
+                <img src={editIcon} alt="수정" className="h-4 w-4 object-contain" />
               </Link>
               <button
                 type="button"
@@ -200,11 +179,7 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center disabled:opacity-50"
                 aria-label="삭제"
               >
-                <img
-                  src={deleteIcon}
-                  alt="삭제"
-                  className="h-4 w-4 object-contain"
-                />
+                <img src={deleteIcon} alt="삭제" className="h-4 w-4 object-contain" />
               </button>
             </>
           ) : (
@@ -216,24 +191,20 @@ export default function PostDetailPage() {
                 aria-label="북마크"
               >
                 <img
-                  src={
-                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
-                  }
+                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
                   alt="북마크"
                   className="block h-[20px] w-[20px]"
                   draggable={false}
                 />
               </button>
-              <Link
-                to="/report"
+              <button
+                type="button"
+                onClick={() => setShowReportModal(true)}
                 className="flex h-9 w-9 items-center justify-center"
+                aria-label="신고하기"
               >
-                <img
-                  src={recIconReport}
-                  alt="신고하기 아이콘"
-                  className="h-6 w-6 object-contain"
-                />
-              </Link>
+                <img src={recIconReport} alt="신고하기 아이콘" className="h-6 w-6 object-contain" />
+              </button>
             </>
           )}
         </div>
@@ -359,11 +330,10 @@ export default function PostDetailPage() {
         </div>
       </footer>
 
-      {/* 🌟 신고 모달 렌더링 (showReportModal이 true일 때만 보임) */}
-      {showReportModal && (
+      {showReportModal && post && (
         <ReportPage
           targetType="POST"
-          targetId={Number(searchParams.get("id"))} // URL 파라미터에서 가져온 글 번호를 그대로 넘겨줍니다.
+          targetId={post.postId}
           onClose={() => setShowReportModal(false)}
         />
       )}

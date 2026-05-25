@@ -1,43 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { getPosts, getRecommendations } from "../../api/posts/postsApi";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getPosts, searchPosts } from "../../api/posts/postsApi";
+import type { SearchPostsParams } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
-import type { PostSummary } from "../../api/posts/type";
 import {
   recIconBell,
-  recIconBookmarkActive,
-  recIconBookmarkMuted,
-  recIconClock,
   recIconFilter,
   recIconList,
-  recIconLocation,
   recIconSearch,
   recIconSparkle,
-  recIconSunrise,
-  recIconUser,
-  recPill1,
-  recPill2,
-  recPill3,
-  recPill4,
 } from "../../assets/figma/home";
 import AppBottomNav from "../../components/AppBottomNav";
 import MatchingAlgorithmModal from "../../features/home/MatchingAlgorithmModal";
+import { RoommateCard, apiPostToCard } from "../../features/home/RoommateCard";
 import SearchFilterSheet from "../../features/home/SearchFilterSheet";
-
-type RoommatePost = {
-  id: string;
-  nickname: string;
-  majorYear: string;
-  dormLabel: string;
-  title: string;
-  sleepTime: string;
-  wakeTime: string;
-  score?: string;
-  scoreTone?: "primary" | "mint";
-  bookmarkIcon: string;
-  tags: Array<{ label: string; bg: string }>;
-  date: string;
-};
 
 function IconImg({ src, alt }: { src: string; alt: string }) {
   return (
@@ -50,225 +26,52 @@ function IconImg({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-function TagPill({ label, bg }: { label: string; bg: string }) {
-  return (
-    <span className="relative flex h-[26px] items-center rounded-full border border-[rgba(122,158,130,0.1)] px-[11px] py-[5px] text-[12px] font-medium text-[#7a9e82]">
-      <img
-        alt=""
-        src={bg}
-        className="pointer-events-none absolute inset-0 h-full w-full rounded-full object-cover"
-        draggable={false}
-      />
-      <span className="relative leading-[16px]">{label}</span>
-    </span>
-  );
-}
-
-function ScoreBadge({
-  score,
-  tone,
-}: {
-  score: string;
-  tone: RoommatePost["scoreTone"];
-}) {
-  if (tone === "primary") {
-    return (
-      <span className="flex h-[30px] items-center rounded-[12px] border border-[rgba(122,158,130,0.2)] bg-gradient-to-t from-[#f3f7f4] to-[#ecfdf5] px-[11px] py-[7px] text-[12px] font-black leading-[16px] text-[#7a9e82]">
-        {score}
-      </span>
-    );
-  }
-
-  return (
-    <span className="flex h-[30px] items-center rounded-[12px] border border-[rgba(167,243,208,0.5)] bg-gradient-to-t from-[#ecfdf5] to-[#f0fdfa] px-[11px] py-[7px] text-[12px] font-black leading-[16px] text-[#059669]">
-      {score}
-    </span>
-  );
-}
-
-function RoommateCard({ post }: { post: RoommatePost }) {
-  const [isBookmarked, setIsBookmarked] = useState(
-    post.bookmarkIcon === recIconBookmarkActive,
-  );
-
-  const handleBookmarkToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    setIsBookmarked((prev) => !prev);
-  };
-
-  return (
-    <article className="w-full">
-      <div className="w-full rounded-[16px] border border-[rgba(122,158,130,0.1)] bg-[rgba(255,255,255,0.7)] p-[17px] backdrop-blur-[2px]">
-        <div className="flex items-start justify-between pb-[12px]">
-          <div className="flex w-[148px] items-center gap-[10px]">
-            <div
-              className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-2 border-[rgba(122,158,130,0.1)] p-[2px]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, rgb(226, 238, 228) 0%, rgb(209, 250, 229) 100%)",
-              }}
-            >
-              <div className="h-[18px] w-[18.75px]">
-                <IconImg src={recIconUser} alt="" />
-              </div>
-            </div>
-            <div className="flex flex-col items-start">
-              <div className="text-[14px] font-bold leading-[20px] text-[#111827]">
-                {post.nickname}
-              </div>
-              <div className="whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">
-                {post.majorYear}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-[8px]">
-            {post.score && post.scoreTone ? (
-              <ScoreBadge score={post.score} tone={post.scoreTone} />
-            ) : null}
-
-            <button
-              type="button"
-              className="flex h-[32px] w-[32px] items-center justify-center"
-              aria-label="북마크"
-              onClick={handleBookmarkToggle}
-            >
-              <div className="h-[18px] w-[18.75px]">
-                <IconImg
-                  src={
-                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
-                  }
-                  alt="북마크"
-                />
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-[6px] pb-[8px]">
-          <div className="h-[14px] w-[14.578px]">
-            <IconImg src={recIconLocation} alt="" />
-          </div>
-          <div className="text-[12px] leading-[16px] text-[#6b7280]">
-            {post.dormLabel}
-          </div>
-        </div>
-
-        <div className="pb-[8px]">
-          <h3 className="overflow-hidden text-[14px] font-semibold leading-[19.25px] text-[#111827]">
-            {post.title}
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-[12px] pb-[12px]">
-          <div className="flex items-center gap-[4px]">
-            <div className="h-[12px] w-[12.5px]">
-              <IconImg src={recIconClock} alt="" />
-            </div>
-            <div className="text-[12px] leading-[16px] text-[#6b7280]">
-              {post.sleepTime}
-            </div>
-          </div>
-          <div className="flex items-center gap-[4px]">
-            <div className="h-[12px] w-[12.5px]">
-              <IconImg src={recIconSunrise} alt="" />
-            </div>
-            <div className="text-[12px] leading-[16px] text-[#6b7280]">
-              {post.wakeTime}
-            </div>
-          </div>
-          <div className="flex items-center gap-[4px]">
-            <span className="h-px w-px" aria-hidden />
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-start gap-[6px]">
-          {post.tags.map((t) => (
-            <TagPill key={t.label} label={t.label} bg={t.bg} />
-          ))}
-        </div>
-
-        <div className="pt-[12px] text-right text-[12px] leading-[16px] text-[#d1d5db]">
-          {post.date}
-        </div>
-      </div>
-    </article>
-  );
-}
-
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAlgorithmOpen, setIsAlgorithmOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  const hasAlarm = true; 
-  
-  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
-  
-  const [apiPosts, setApiPosts] = useState<PostSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<SearchPostsParams>({});
+  const hasAlarm = true;
+  const [isPreferenceSurveyCompleted, setIsPreferenceSurveyCompleted] =
+    useState(false);
 
   useEffect(() => {
     getPreferenceSurveyStatus()
       .then((res) => setIsPreferenceSurveyCompleted(res.completed))
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
+  const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
+  const [apiPosts, setApiPosts] = useState<
+    Parameters<typeof apiPostToCard>[0][]
+  >([]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      setIsLoading(true);
-      try {
-        if (activeTab === "all") {
-          const data = await getPosts();
-          setApiPosts(data);
-        } else {
-          const data = await getRecommendations();
-          setApiPosts(data);
-        }
-      } catch (err) {
-        console.error("데이터를 불러오는 중 오류 발생:", err);
-        setApiPosts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (activeTab !== "all") return;
+    const hasFilter = Object.values(activeFilters).some((v) => v);
+    if (hasFilter) {
+      searchPosts({ ...activeFilters })
+        .then(setApiPosts)
+        .catch(() => setApiPosts([]));
+    } else {
+      getPosts()
+        .then(setApiPosts)
+        .catch(() => setApiPosts([]));
+    }
+  }, [activeTab, location.key, activeFilters]);
 
-    fetchPosts();
-  }, [activeTab]);
+  const allPosts = useMemo(() => apiPosts.map(apiPostToCard), [apiPosts]);
 
-  const pillBgs = [recPill1, recPill2, recPill3, recPill4];
-
-  const dormLabel = (type: string) => {
-    if (type === "LAKE") return "레이크홀";
-    return type; 
-  };
-
-  // ✅ 사용하지 않는 변수들을 제거하고 이 posts 로 통합했습니다!
-  const posts: RoommatePost[] = useMemo(
+  const recommendedPosts = useMemo(
     () =>
-      apiPosts.map((p) => {
-        const scoreTone = p.matchScore && p.matchScore >= 90 ? "primary" : "mint";
-        
-        return {
-          id: String(p.postId),
-          nickname: p.authorNickname,
-          majorYear: `${p.major} ${p.studentNumberLabel} ${String(p.birthYear).slice(-2)}년생`,
-          dormLabel: dormLabel(p.dormitoryType),
-          title: p.title,
-          sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
-          wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
-          bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
-          tags: p.tags?.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })) || [],
-          date: p.createdAt.slice(0, 10),
-          score: activeTab === "recommended" && p.matchScore ? `${p.matchScore}점` : undefined,
-          scoreTone: activeTab === "recommended" && p.matchScore ? scoreTone : undefined,
-        };
-      }),
-    [apiPosts, activeTab]
+      allPosts.slice(0, 2).map((post, idx) => ({
+        ...post,
+        score: idx === 0 ? "92점" : "78점",
+        scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
+      })),
+    [allPosts],
   );
+  const posts = activeTab === "recommended" ? recommendedPosts : allPosts;
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -318,12 +121,14 @@ export default function HomePage() {
 
           <div className="flex w-full items-start pb-[16px]">
             <div className="relative h-[42px] w-full">
-              <div className="flex h-[42px] w-full items-center rounded-[12px] border border-[rgba(122,158,130,0.15)] bg-[rgba(243,247,244,0.4)] py-[11px] pl-[41px] pr-[17px] text-[14px] leading-[20px]">
-                <span className="text-[#9ca3af]">
-                  닉네임, 학과, 키워드로 검색...
-                </span>
-              </div>
-              <div className="absolute left-[12px] top-[11px] h-[20px] w-[20px]">
+              <button
+                type="button"
+                onClick={() => navigate("/search")}
+                className="h-[42px] w-full rounded-[12px] border border-[rgba(122,158,130,0.15)] bg-[rgba(243,247,244,0.4)] py-[11px] pl-[41px] pr-[17px] text-left text-[14px] leading-[20px] text-[#9ca3af]"
+              >
+                닉네임, 학과, 키워드로 검색...
+              </button>
+              <div className="pointer-events-none absolute left-[12px] top-[11px] h-[20px] w-[20px]">
                 <IconImg src={recIconSearch} alt="" />
               </div>
             </div>
@@ -454,17 +259,13 @@ export default function HomePage() {
                 바로가기
               </button>
             </div>
-          ) : isLoading ? (
-            <div className="flex w-full justify-center py-10">
-              <span className="text-sm text-gray-400">데이터를 불러오는 중...</span>
-            </div>
-          ) : posts.length === 0 ? (
-            <div className="flex w-full justify-center py-10">
-              <span className="text-sm text-gray-400">등록된 구인글이 없습니다.</span>
-            </div>
           ) : (
             posts.map((p) => (
-              <Link key={p.id} to={`/post/detail?id=${p.id}`} className="w-full">
+              <Link
+                key={p.id}
+                to={`/post/detail?id=${p.id}`}
+                className="w-full"
+              >
                 <RoommateCard post={p} />
               </Link>
             ))
@@ -479,6 +280,7 @@ export default function HomePage() {
         <SearchFilterSheet
           open={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}
+          onApply={(params) => setActiveFilters(params)}
         />
       </div>
     </div>

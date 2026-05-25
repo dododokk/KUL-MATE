@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { submitReport } from "../../api/report/reportApi"; // 경로에 맞게 수정해주세요
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { submitReport } from "../../api/report/reportApi";
 
-// 부모 컴포넌트(게시글 상세 등)에서 전달받아야 할 Props 정의
 type ReportPageProps = {
-  targetType?: "POST" | "USER"; // 기본값 POST
-  targetId: number;             // 신고할 게시글(또는 유저)의 ID
-  onClose: () => void;          // 닫기 버튼 또는 배경 클릭 시 모달을 닫는 함수
+  targetType?: "POST" | "USER";
+  targetId?: number;
+  onClose?: () => void;
 };
 
 const REASONS = ["부적절한 내용", "허위 정보", "도배/스팸", "욕설/비방", "기타"];
 
-export default function ReportPage({ targetType = "POST", targetId, onClose }: ReportPageProps) {
+export default function ReportPage({ targetType: propTargetType, targetId: propTargetId, onClose: propOnClose }: ReportPageProps = {}) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const targetId = propTargetId ?? Number(searchParams.get("id") ?? 0);
+  const targetType = propTargetType ?? (searchParams.get("type") as "POST" | "USER") ?? "POST";
+  const onClose = propOnClose ?? (() => navigate(-1));
   const [selected, setSelected] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
