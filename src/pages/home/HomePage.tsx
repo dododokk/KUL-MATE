@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getPosts } from "../../api/posts/postsApi";
+import { getPosts, addBookmark, removeBookmark } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import type { PostSummary } from "../../api/posts/type";
 import {
@@ -91,44 +91,49 @@ function RoommateCard({ post }: { post: RoommatePost }) {
     post.bookmarkIcon === recIconBookmarkActive,
   );
 
-  const handleBookmarkToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleBookmarkToggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
-    setIsBookmarked((prev) => !prev);
+    try {
+      if (isBookmarked) {
+        await removeBookmark(Number(post.id));
+      } else {
+        await addBookmark(Number(post.id));
+      }
+      setIsBookmarked((prev) => !prev);
+    } catch {
+      // 실패 시 상태 유지
+    }
   };
 
   return (
     <article className="w-full">
       <div className="w-full rounded-[16px] border border-[rgba(122,158,130,0.1)] bg-[rgba(255,255,255,0.7)] p-[17px] backdrop-blur-[2px]">
-        <div className="flex items-start justify-between pb-[12px]">
-          <div className="flex w-[148px] items-center gap-[10px]">
+        {/* 작성자 행 */}
+        <div className="flex h-[40px] items-center justify-between pb-[12px]" style={{ height: "auto", paddingBottom: "12px" }}>
+          <div className="flex h-[40px] w-[148px] shrink-0 items-center gap-[10px]">
             <div
-              className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-2 border-[rgba(122,158,130,0.1)] p-[2px]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, rgb(226, 238, 228) 0%, rgb(209, 250, 229) 100%)",
-              }}
+              className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full border-2 border-[rgba(122,158,130,0.1)] p-[2px]"
+              style={{ backgroundImage: "linear-gradient(135deg, rgb(226, 238, 228) 0%, rgb(209, 250, 229) 100%)" }}
             >
               <div className="h-[18px] w-[18.75px]">
                 <IconImg src={recIconUser} alt="" />
               </div>
             </div>
-            <div className="flex flex-col items-start">
-              <div className="text-[14px] font-bold leading-[20px] text-[#111827]">
+            <div className="flex h-[36px] min-w-0 flex-col items-start justify-center">
+              <div className="h-[20px] overflow-hidden text-[14px] font-bold leading-[20px] text-[#111827]">
                 {post.nickname}
               </div>
-              <div className="whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">
+              <div className="h-[16px] overflow-hidden whitespace-nowrap text-[12px] leading-[16px] text-[#9ca3af]">
                 {post.majorYear}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-[8px]">
+          <div className="flex shrink-0 items-center gap-[8px]">
             {post.score && post.scoreTone ? (
               <ScoreBadge score={post.score} tone={post.scoreTone} />
             ) : null}
-
             <button
               type="button"
               className="flex h-[32px] w-[32px] items-center justify-center"
@@ -137,9 +142,7 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             >
               <div className="h-[18px] w-[18.75px]">
                 <IconImg
-                  src={
-                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
-                  }
+                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
                   alt="북마크"
                 />
               </div>
@@ -147,8 +150,9 @@ function RoommateCard({ post }: { post: RoommatePost }) {
           </div>
         </div>
 
+        {/* 생활관 */}
         <div className="flex items-center gap-[6px] pb-[8px]">
-          <div className="h-[14px] w-[14.578px]">
+          <div className="flex h-[16px] w-[16px] shrink-0 items-center justify-center">
             <IconImg src={recIconLocation} alt="" />
           </div>
           <div className="text-[12px] leading-[16px] text-[#6b7280]">
@@ -156,15 +160,17 @@ function RoommateCard({ post }: { post: RoommatePost }) {
           </div>
         </div>
 
+        {/* 제목 */}
         <div className="pb-[8px]">
           <h3 className="overflow-hidden text-[14px] font-semibold leading-[19.25px] text-[#111827]">
             {post.title}
           </h3>
         </div>
 
+        {/* 취침/기상 시간 */}
         <div className="flex items-center gap-[12px] pb-[12px]">
           <div className="flex items-center gap-[4px]">
-            <div className="h-[12px] w-[12.5px]">
+            <div className="flex h-[16px] w-[16px] shrink-0 items-center justify-center">
               <IconImg src={recIconClock} alt="" />
             </div>
             <div className="text-[12px] leading-[16px] text-[#6b7280]">
@@ -172,24 +178,23 @@ function RoommateCard({ post }: { post: RoommatePost }) {
             </div>
           </div>
           <div className="flex items-center gap-[4px]">
-            <div className="h-[12px] w-[12.5px]">
+            <div className="flex h-[16px] w-[16px] shrink-0 items-center justify-center">
               <IconImg src={recIconSunrise} alt="" />
             </div>
             <div className="text-[12px] leading-[16px] text-[#6b7280]">
               {post.wakeTime}
             </div>
           </div>
-          <div className="flex items-center gap-[4px]">
-            <span className="h-px w-px" aria-hidden />
-          </div>
         </div>
 
+        {/* 태그 */}
         <div className="flex flex-wrap items-start gap-[6px]">
           {post.tags.map((t) => (
             <TagPill key={t.label} label={t.label} bg={t.bg} />
           ))}
         </div>
 
+        {/* 날짜 */}
         <div className="pt-[12px] text-right text-[12px] leading-[16px] text-[#d1d5db]">
           {post.date}
         </div>

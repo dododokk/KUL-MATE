@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { getPost, deletePost } from "../../api/posts/postsApi";
+import { getPost, deletePost, addBookmark, removeBookmark } from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
 import {
   recIconBookmarkActive,
@@ -84,8 +84,18 @@ export default function PostDetailPage() {
       .catch(() => setPost(null));
   }, [searchParams]);
 
-  const handleBookmarkToggle = () => {
-    setIsBookmarked((prev) => !prev);
+  const handleBookmarkToggle = async () => {
+    if (!post) return;
+    try {
+      if (isBookmarked) {
+        await removeBookmark(post.postId);
+      } else {
+        await addBookmark(post.postId);
+      }
+      setIsBookmarked((prev) => !prev);
+    } catch {
+      alert("북마크 처리에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const handleDelete = async () => {

@@ -33,3 +33,19 @@ export async function updatePost(postId: number, body: CreatePostRequest): Promi
 export async function togglePostVisibility(postId: number): Promise<void> {
   await axiosInstance.patch(`/api/posts/${postId}/visibility`);
 }
+
+// 북마크 목록 조회 (GET /api/posts/bookmarks)
+export async function getBookmarkedPosts(): Promise<GetPostsResponse> {
+  const { data } = await axiosInstance.get<GetPostsResponse>("/api/posts/bookmarks");
+  return data;
+}
+
+// 북마크 추가 (POST /api/posts/{postId}/bookmark)
+export async function addBookmark(postId: number): Promise<void> {
+  await axiosInstance.post(`/api/posts/${postId}/bookmark`);
+}
+
+// 북마크 해제 (DELETE /api/posts/{postId}/bookmark)
+export async function removeBookmark(postId: number): Promise<void> {
+  await axiosInstance.delete(`/api/posts/${postId}/bookmark`);
+}
