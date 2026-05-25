@@ -2,9 +2,9 @@ import type { MyPost } from "./types";
 
 type Props = {
   posts: MyPost[];
-  onTogglePublic: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onTogglePublic: (id: number) => void;
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
 };
 
 export default function MyPostList({ posts, onTogglePublic, onEdit, onDelete }: Props) {
@@ -20,7 +20,7 @@ export default function MyPostList({ posts, onTogglePublic, onEdit, onDelete }: 
     <div className="flex flex-col gap-[12px]">
       {posts.map((post) => (
         <div
-          key={post.id}
+          key={post.postId}
           className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] p-[17px]"
         >
           {/* Title + visibility badge */}
@@ -30,41 +30,41 @@ export default function MyPostList({ posts, onTogglePublic, onEdit, onDelete }: 
             </h3>
             <span
               className={`shrink-0 px-[8px] py-[2px] rounded-full font-bold text-[12px] leading-[16px] ${
-                post.isPublic
+                post.visible
                   ? "bg-[rgba(122,158,130,0.1)] text-[#7a9e82]"
                   : "bg-[#f9fafb] text-[#9ca3af]"
               }`}
             >
-              {post.isPublic ? "공개" : "비공개"}
+              {post.visibilityLabel || (post.visible ? "공개" : "비공개")}
             </span>
           </div>
 
           {/* Meta */}
           <p className="font-normal text-[#9ca3af] text-[12px] leading-[16px] pb-[12px]">
-            {post.dorm} · {post.date}
+            {post.dormitoryType} · {new Date(post.createdAt).toLocaleDateString()}
           </p>
 
           {/* Action buttons */}
           <div className="flex gap-[8px]">
             <button
               type="button"
-              onClick={() => onTogglePublic(post.id)}
+              onClick={() => onTogglePublic(post.postId)}
               className="flex-1 h-[34px] flex items-center justify-center border border-[rgba(122,158,130,0.2)] bg-[rgba(122,158,130,0.05)] rounded-[12px]"
             >
               <span className="font-semibold text-[#7a9e82] text-[12px] leading-[16px]">
-                {post.isPublic ? "비공개 전환" : "공개 전환"}
+                {post.visible ? "비공개 전환" : "공개 전환"}
               </span>
             </button>
             <button
               type="button"
-              onClick={() => onEdit(post.id)}
+              onClick={() => onEdit(post.postId)}
               className="flex-1 h-[34px] flex items-center justify-center border border-[#e5e7eb] rounded-[12px]"
             >
               <span className="font-semibold text-[#4b5563] text-[12px] leading-[16px]">수정</span>
             </button>
             <button
               type="button"
-              onClick={() => onDelete(post.id)}
+              onClick={() => onDelete(post.postId)}
               className="flex-1 h-[34px] flex items-center justify-center border border-[#fee2e2] rounded-[12px]"
             >
               <span className="font-semibold text-[#f87171] text-[12px] leading-[16px]">삭제</span>

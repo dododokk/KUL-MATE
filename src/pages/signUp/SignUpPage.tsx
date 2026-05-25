@@ -24,6 +24,7 @@ function BackArrow() {
 export default function SignUpPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
+  const [verifiedEmail, setVerifiedEmail] = useState("");
 
   const handleBack = () => {
     if (step === 1) navigate("/login");
@@ -55,9 +56,16 @@ export default function SignUpPage() {
 
       {/* Step content */}
       {step === 1 && <SignUpStep1Terms onNext={() => setStep(2)} />}
-      {step === 2 && <SignUpStep2Email onNext={() => setStep(3)} />}
+      {step === 2 && (
+        <SignUpStep2Email
+          onNext={(email) => {
+            setVerifiedEmail(email);
+            setStep(3);
+          }}
+        />
+      )}
       {step === 3 && (
-        <SignUpStep3Account onComplete={() => navigate("/login")} />
+        <SignUpStep3Account email={verifiedEmail} onComplete={() => navigate("/login")} />
       )}
     </div>
   );
