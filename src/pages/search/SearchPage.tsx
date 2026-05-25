@@ -1,25 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getSearchHistories, deleteSearchHistory, deleteAllSearchHistories } from "../../api/search/searchApi";
+import type { SearchHistory } from "../../api/search/type";
 import { searchPosts } from "../../api/posts/postsApi";
 import type { PostSummary } from "../../api/posts/type";
 import { recIconBack, recIconClock, recIconSearch } from "../../assets/figma/home";
 import { RoommateCard, apiPostToCard } from "../../features/home/RoommateCard";
 
-const HISTORY_KEY = "kul_search_history";
 const MAX_HISTORY = 10;
-
-function loadHistory(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
 
 export default function SearchPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [history, setHistory] = useState<string[]>(loadHistory);
+  const [history, setHistory] = useState<SearchHistory[]>([]);
   const [results, setResults] = useState<PostSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +20,9 @@ export default function SearchPage() {
 
   useEffect(() => {
     inputRef.current?.focus();
+    getSearchHistories()
+      .then(setHistory)
+      .catch(() => {});
   }, []);
 
   const doSearch = useCallback(async (keyword: string) => {
@@ -57,28 +53,39 @@ export default function SearchPage() {
   const addToHistory = (keyword: string) => {
     const trimmed = keyword.trim();
     if (!trimmed) return;
-    const updated = [trimmed, ...history.filter((h) => h !== trimmed)].slice(0, MAX_HISTORY);
-    setHistory(updated);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    // 낙관적 업데이트: 같은 키워드 중복 제거 후 맨 앞에 추가
+    setHistory((prev) => {
+      const filtered = prev.filter((h) => h.keyword !== trimmed);
+      const next: SearchHistory = { searchHistoryKey: -Date.now(), keyword: trimmed, createdAt: new Date().toISOString() };
+      return [next, ...filtered].slice(0, MAX_HISTORY);
+    });
   };
 
-  const removeFromHistory = (keyword: string, e: React.MouseEvent) => {
+  const removeFromHistory = async (item: SearchHistory, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = history.filter((h) => h !== keyword);
-    setHistory(updated);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    setHistory((prev) => prev.filter((h) => h.searchHistoryKey !== item.searchHistoryKey));
+    try {
+      await deleteSearchHistory(item.searchHistoryKey);
+    } catch {
+      // 실패 시 목록 다시 불러오기
+      getSearchHistories().then(setHistory).catch(() => {});
+    }
   };
 
-  const clearAllHistory = () => {
+  const clearAllHistory = async () => {
     setHistory([]);
-    localStorage.removeItem(HISTORY_KEY);
+    try {
+      await deleteAllSearchHistories();
+    } catch {
+      getSearchHistories().then(setHistory).catch(() => {});
+    }
   };
 
-  const handleHistoryClick = (keyword: string) => {
-    setQuery(keyword);
-    addToHistory(keyword);
+  const handleHistoryClick = (item: SearchHistory) => {
+    setQuery(item.keyword);
+    addToHistory(item.keyword);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    doSearch(keyword);
+    doSearch(item.keyword);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -174,26 +181,26 @@ export default function SearchPage() {
               </div>
             ) : (
               <ul className="flex flex-col">
-                {history.map((keyword) => (
-                  <li key={keyword}>
+                {history.map((item) => (
+                  <li key={item.searchHistoryKey}>
                     <div className="flex h-[48px] items-center justify-between">
                       <button
                         type="button"
-                        onClick={() => handleHistoryClick(keyword)}
+                        onClick={() => handleHistoryClick(item)}
                         className="flex flex-1 items-center gap-[12px] min-w-0 py-[14px]"
                       >
                         <div className="flex h-[16px] w-[16px] shrink-0 items-center justify-center opacity-50">
                           <img src={recIconClock} alt="" className="block h-full w-full" draggable={false} />
                         </div>
                         <span className="truncate text-[14px] leading-[20px] text-[#374151]">
-                          {keyword}
+                          {item.keyword}
                         </span>
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => removeFromHistory(keyword, e)}
+                        onClick={(e) => removeFromHistory(item, e)}
                         className="ml-[8px] flex h-[32px] w-[32px] shrink-0 items-center justify-center text-[#c4c9d4] active:text-[#9ca3af]"
-                        aria-label={`${keyword} 삭제`}
+                        aria-label={`${item.keyword} 삭제`}
                       >
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <path
