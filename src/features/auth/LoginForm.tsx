@@ -77,10 +77,11 @@ export default function LoginForm() {
             setErrorMsg("");
             try {
               const res = await login({ username: id, password });
-              const { accessToken, refreshToken, isOnboardingCompleted } = res.data;
+              const { accessToken, refreshToken, isOnboardingCompleted, userId } = res.data;
               localStorage.setItem("kul_accessToken", accessToken);
               localStorage.setItem("kul_refreshToken", refreshToken);
               localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
+              localStorage.setItem("kul_userId", String(userId));
               navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
             } catch {
               setErrorMsg("아이디 또는 비밀번호가 올바르지 않아요.");

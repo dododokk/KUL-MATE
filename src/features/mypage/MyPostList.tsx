@@ -2,12 +2,13 @@ import type { MyPost } from "./types";
 
 type Props = {
   posts: MyPost[];
+  onPress: (id: number) => void;
   onTogglePublic: (id: number) => void;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
 };
 
-export default function MyPostList({ posts, onTogglePublic, onEdit, onDelete }: Props) {
+export default function MyPostList({ posts, onPress, onTogglePublic, onEdit, onDelete }: Props) {
   if (posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-[48px]">
@@ -23,26 +24,30 @@ export default function MyPostList({ posts, onTogglePublic, onEdit, onDelete }: 
           key={post.postId}
           className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] rounded-[16px] p-[17px]"
         >
-          {/* Title + visibility badge */}
-          <div className="flex items-start justify-between pb-[8px]">
-            <h3 className="font-bold text-[#111827] text-[14px] leading-[20px] flex-1 pr-[8px]">
-              {post.title}
-            </h3>
-            <span
-              className={`shrink-0 px-[8px] py-[2px] rounded-full font-bold text-[12px] leading-[16px] ${
-                post.visible
-                  ? "bg-[rgba(122,158,130,0.1)] text-[#7a9e82]"
-                  : "bg-[#f9fafb] text-[#9ca3af]"
-              }`}
-            >
-              {post.visibilityLabel || (post.visible ? "공개" : "비공개")}
-            </span>
-          </div>
-
-          {/* Meta */}
-          <p className="font-normal text-[#9ca3af] text-[12px] leading-[16px] pb-[12px]">
-            {post.dormitoryType} · {new Date(post.createdAt).toLocaleDateString()}
-          </p>
+          {/* 클릭 시 상세 페이지 이동 영역 */}
+          <button
+            type="button"
+            onClick={() => onPress(post.postId)}
+            className="w-full text-left"
+          >
+            <div className="flex items-start justify-between pb-[8px]">
+              <h3 className="font-bold text-[#111827] text-[14px] leading-[20px] flex-1 pr-[8px]">
+                {post.title}
+              </h3>
+              <span
+                className={`shrink-0 px-[8px] py-[2px] rounded-full font-bold text-[12px] leading-[16px] ${
+                  post.visible
+                    ? "bg-[rgba(122,158,130,0.1)] text-[#7a9e82]"
+                    : "bg-[#f9fafb] text-[#9ca3af]"
+                }`}
+              >
+                {post.visibilityLabel || (post.visible ? "공개" : "비공개")}
+              </span>
+            </div>
+            <p className="font-normal text-[#9ca3af] text-[12px] leading-[16px] pb-[12px]">
+              {post.dormitoryType} · {new Date(post.createdAt).toLocaleDateString()}
+            </p>
+          </button>
 
           {/* Action buttons */}
           <div className="flex gap-[8px]">
