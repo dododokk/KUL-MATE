@@ -255,9 +255,13 @@ export default function PostDetailPage() {
         {/* 작성자 프로필 */}
         <section className="rounded-[16px] border border-[#f3f4f6] bg-white p-[21px]">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[rgba(122,158,130,0.1)] text-2xl">
+            <button
+              type="button"
+              className="flex h-14 w-14 items-center justify-center rounded-[16px] bg-[rgba(122,158,130,0.1)] text-2xl shrink-0"
+              onClick={() => post && !isMyPost && navigate(`/profile/${post.author.authorId}`)}
+            >
               👤
-            </div>
+            </button>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-[16px] font-black text-[#111827]">
@@ -287,6 +291,15 @@ export default function PostDetailPage() {
               </div>
             )}
           </div>
+          {post && !isMyPost && (
+            <button
+              type="button"
+              className="mt-[12px] w-full h-[34px] flex items-center justify-center border border-[rgba(122,158,130,0.2)] bg-[rgba(122,158,130,0.05)] rounded-[12px]"
+              onClick={() => navigate(`/profile/${post.author.authorId}`)}
+            >
+              <span className="font-bold text-[#7a9e82] text-[12px] leading-[16px]">프로필 보기</span>
+            </button>
+          )}
         </section>
 
         {/* 글 내용 */}

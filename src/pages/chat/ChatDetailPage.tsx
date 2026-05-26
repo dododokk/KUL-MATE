@@ -11,6 +11,7 @@ type RoomState = {
   opponentNickname?: string;
   matchScore?: number;
   dormitoryType?: string;
+  opponentId?: number;
 };
 
 function formatMessageTime(isoString: string | undefined): string {
@@ -54,6 +55,7 @@ export default function ChatDetailPage() {
   const [isRequested, setIsRequested] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const opponentId = state.opponentId;
   const opponentNickname =
     state.opponentNickname ??
     messages.find((m) => m.senderId !== currentUserId)?.senderNickname ??
@@ -183,13 +185,16 @@ export default function ChatDetailPage() {
         {/* 프로필 카드 */}
         <div className="px-[16px] pt-[12px]">
           <div className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.7)] border border-[rgba(122,158,130,0.1)] flex gap-[12px] items-center p-[13px] rounded-[16px] h-[66px]">
-            <div className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center rounded-full shrink-0 size-[40px]">
+            <button
+              className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center rounded-full shrink-0 size-[40px]"
+              onClick={() => opponentId && navigate(`/profile/${opponentId}`)}
+            >
               <img
                 src={profileIcon}
                 alt="프로필"
                 className="w-[22px] h-[22px]"
               />
-            </div>
+            </button>
             <div className="flex flex-col min-w-0 flex-1">
               <p className="font-bold text-[#1f2937] text-[12px] leading-[16px] truncate">
                 {opponentNickname}
@@ -198,7 +203,10 @@ export default function ChatDetailPage() {
                 {dormitoryType}
               </p>
             </div>
-            <button className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center h-[28px] px-[10px] py-[6px] rounded-[12px] shrink-0">
+            <button
+              className="bg-[rgba(122,158,130,0.1)] flex items-center justify-center h-[28px] px-[10px] py-[6px] rounded-[12px] shrink-0"
+              onClick={() => opponentId && navigate(`/profile/${opponentId}`)}
+            >
               <span className="font-bold text-[#7a9e82] text-[12px] leading-[16px]">
                 프로필 보기
               </span>
@@ -248,9 +256,12 @@ export default function ChatDetailPage() {
                   }`}
                 >
                   {!isOwn && (
-                    <div className="flex items-end pb-[2px] shrink-0">
+                    <button
+                      className="flex items-end pb-[2px] shrink-0"
+                      onClick={() => opponentId && navigate(`/profile/${opponentId}`)}
+                    >
                       <OtherAvatar size={28} />
-                    </div>
+                    </button>
                   )}
                   <div
                     className={`flex flex-col gap-[2px] max-w-[257px] ${

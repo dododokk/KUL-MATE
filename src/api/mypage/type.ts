@@ -88,3 +88,34 @@ export interface ChangePasswordRequest {
   newPassword: string;
   newPasswordConfirm: string;
 }
+
+// --- 유저 프로필 조회 (GET /api/users/{userId}/profile) ---
+export interface UserProfileResponse {
+  userId: number;
+  nickname: string;
+  gender: "MALE" | "FEMALE";
+  department: string;
+  grade: number;
+  dormitoryType: string;
+  profileImageUrl: string | null;
+  matchScore: number;
+  post: {
+    postId: number;
+    title: string;
+    content: string;
+    tags: string[];
+  } | null;
+  lifestyle: {
+    mbti: string;
+    smokingStatus: string;
+    dormitoryType: string;
+    sleepHabit: string;
+    sleepTime: string;
+    wakeUpTime: string;
+    showerTime: string;
+    cleaningFrequencyScore: string;
+    organizationSensitivityScore: string;
+    temperatureSensitivityScore: string;
+    homeVisitFrequency: string;
+  } | null;
+}
