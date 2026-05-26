@@ -7,6 +7,7 @@ import {
   removeBookmark,
 } from "../../api/posts/postsApi";
 import type { PostDetail } from "../../api/posts/type";
+import { getOrCreateChatRoom } from "../../api/chat/chatApi";
 import {
   recIconBookmarkActive,
   recIconBookmarkMuted,
@@ -80,10 +81,13 @@ export default function PostDetailPage() {
 
   // 팀원이 추가한 상태
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   // 본인이 추가한 룸메이트 신청 상태
-  const [requestModal, setRequestModal] = useState<"none" | "confirm" | "success">("none");
+  const [requestModal, setRequestModal] = useState<
+    "none" | "confirm" | "success"
+  >("none");
 
   // 내 게시글인지 확인하는 로직
   const currentUserId = Number(localStorage.getItem("kul_userId"));
@@ -143,7 +147,9 @@ export default function PostDetailPage() {
       setRequestModal("success");
     } catch (err: any) {
       console.error("신청 실패:", err);
-      alert(err.response?.data?.message || "룸메이트 신청 중 오류가 발생했습니다.");
+      alert(
+        err.response?.data?.message || "룸메이트 신청 중 오류가 발생했습니다.",
+      );
       setRequestModal("none");
     }
   };
@@ -191,7 +197,11 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center"
                 aria-label="수정"
               >
-                <img src={editIcon} alt="수정" className="h-4 w-4 object-contain" />
+                <img
+                  src={editIcon}
+                  alt="수정"
+                  className="h-4 w-4 object-contain"
+                />
               </Link>
               <button
                 type="button"
@@ -200,7 +210,11 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center disabled:opacity-50"
                 aria-label="삭제"
               >
-                <img src={deleteIcon} alt="삭제" className="h-4 w-4 object-contain" />
+                <img
+                  src={deleteIcon}
+                  alt="삭제"
+                  className="h-4 w-4 object-contain"
+                />
               </button>
             </>
           ) : (
@@ -212,7 +226,9 @@ export default function PostDetailPage() {
                 aria-label="북마크"
               >
                 <img
-                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
+                  src={
+                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
+                  }
                   alt="북마크"
                   className="block h-[20px] w-[20px]"
                   draggable={false}
@@ -224,7 +240,11 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center"
                 aria-label="신고하기"
               >
-                <img src={recIconReport} alt="신고하기 아이콘" className="h-6 w-6 object-contain" />
+                <img
+                  src={recIconReport}
+                  alt="신고하기 아이콘"
+                  className="h-6 w-6 object-contain"
+                />
               </button>
             </>
           )}
@@ -344,10 +364,32 @@ export default function PostDetailPage() {
       {!isMyPost && (
         <footer className="fixed bottom-0 left-0 w-full border-t border-[#f3f4f6] bg-white px-5 pb-8 pt-[13px]">
           <div className="flex gap-3">
-            <button className="h-12 flex-1 rounded-[12px] bg-[rgba(122,158,130,0.1)] text-[14px] font-bold text-[#7a9e82]">
-              채팅하기
+            <button
+              type="button"
+              disabled={isChatLoading || !post}
+              onClick={async () => {
+                if (!post) return;
+                setIsChatLoading(true);
+                try {
+                  const room = await getOrCreateChatRoom(post.postId);
+                  navigate(`/chat/${room.roomId}`, {
+                    state: {
+                      opponentNickname: room.opponentNickname,
+                      matchScore: room.matchScore,
+                      dormitoryType: room.dormitoryType,
+                    },
+                  });
+                } catch {
+                  alert("채팅방을 열 수 없습니다. 다시 시도해주세요.");
+                } finally {
+                  setIsChatLoading(false);
+                }
+              }}
+              className="h-12 flex-1 rounded-[12px] bg-[rgba(122,158,130,0.1)] text-[14px] font-bold text-[#7a9e82] disabled:opacity-50"
+            >
+              {isChatLoading ? "연결 중..." : "채팅하기"}
             </button>
-            <button 
+            <button
               type="button"
               onClick={() => setRequestModal("confirm")}
               className="h-12 flex-1 rounded-[12px] bg-[#7a9e82] text-[14px] font-bold text-white"

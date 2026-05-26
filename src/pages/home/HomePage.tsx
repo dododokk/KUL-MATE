@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getPosts, searchPosts } from "../../api/posts/postsApi";
+import { getPosts, searchPosts, getRecommendations } from "../../api/posts/postsApi";
 import type { SearchPostsParams } from "../../api/posts/postsApi";
 import { getPreferenceSurveyStatus } from "../../api/survey/surveyApi";
 import {
@@ -42,9 +42,8 @@ export default function HomePage() {
       .catch(() => setIsPreferenceSurveyCompleted(false));
   }, []);
   const [activeTab, setActiveTab] = useState<"all" | "recommended">("all");
-  const [apiPosts, setApiPosts] = useState<
-    Parameters<typeof apiPostToCard>[0][]
-  >([]);
+  const [apiPosts, setApiPosts] = useState<Parameters<typeof apiPostToCard>[0][]>([]);
+  const [recommendedApiPosts, setRecommendedApiPosts] = useState<Parameters<typeof apiPostToCard>[0][]>([]);
 
   useEffect(() => {
     if (activeTab !== "all") return;
@@ -60,17 +59,15 @@ export default function HomePage() {
     }
   }, [activeTab, location.key, activeFilters]);
 
-  const allPosts = useMemo(() => apiPosts.map(apiPostToCard), [apiPosts]);
+  useEffect(() => {
+    if (activeTab !== "recommended") return;
+    getRecommendations()
+      .then(setRecommendedApiPosts)
+      .catch(() => setRecommendedApiPosts([]));
+  }, [activeTab, location.key]);
 
-  const recommendedPosts = useMemo(
-    () =>
-      allPosts.slice(0, 2).map((post, idx) => ({
-        ...post,
-        score: idx === 0 ? "92점" : "78점",
-        scoreTone: idx === 0 ? ("primary" as const) : ("mint" as const),
-      })),
-    [allPosts],
-  );
+  const allPosts = useMemo(() => apiPosts.map(apiPostToCard), [apiPosts]);
+  const recommendedPosts = useMemo(() => recommendedApiPosts.map(apiPostToCard), [recommendedApiPosts]);
   const posts = activeTab === "recommended" ? recommendedPosts : allPosts;
 
   return (
