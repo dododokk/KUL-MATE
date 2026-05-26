@@ -93,6 +93,7 @@ export default function ChatListPage() {
                     opponentNickname: room.opponentNickname,
                     matchScore: room.matchScore,
                     dormitoryType: room.dormitoryType,
+                    opponentId: room.opponentId,
                   },
                 })
               }

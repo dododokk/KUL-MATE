@@ -17,6 +17,7 @@ import AlarmPage from "../pages/alarm/AlarmPage";
 import CalendarPage from "../pages/calendar/CalendarPage";
 import MyPage from "../pages/mypage/MyPage";
 import AccountSettingsPage from "../pages/mypage/AccountSettingsPage";
+import UserProfilePage from "../pages/mypage/UserProfilePage";
 
 export default function AppRouter() {
   return (
@@ -40,6 +41,7 @@ export default function AppRouter() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/my" element={<MyPage />} />
         <Route path="/my/settings" element={<AccountSettingsPage />} />
+        <Route path="/profile/:userId" element={<UserProfilePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
