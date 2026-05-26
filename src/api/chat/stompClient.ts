@@ -34,7 +34,7 @@ export function connectStomp(onConnected?: () => void): Client {
       onConnected?.();
     },
 
-    onStompError: (frame) => {
+    onStompError: (frame: any) => {
       console.error("STOMP error", frame);
     },
 
@@ -42,11 +42,11 @@ export function connectStomp(onConnected?: () => void): Client {
       console.log("STOMP disconnected");
     },
 
-    onWebSocketError: (error) => {
+    onWebSocketError: (error: any) => {
       console.error("WebSocket error", error);
     },
 
-    onWebSocketClose: (event) => {
+    onWebSocketClose: (event: any) => {
       console.log("WebSocket closed", event);
     },
   });
@@ -72,7 +72,7 @@ export function subscribeChatRoom(
   if (!client?.connected) return;
   if (subscriptions.has(roomId)) return;
 
-  const sub = client.subscribe(`/topic/chats/rooms/${roomId}`, (frame) => {
+  const sub = client.subscribe(`/topic/chats/rooms/${roomId}`, (frame: any) => {
     try {
       const msg: StompChatMessage = JSON.parse(frame.body);
       onMessage(msg);

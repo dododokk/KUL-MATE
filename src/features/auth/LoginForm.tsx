@@ -78,11 +78,25 @@ export default function LoginForm() {
             try {
               const res = await login({ username: id, password });
               const { accessToken, refreshToken, isOnboardingCompleted, userId } = res.data;
+              
+              // 기존 토큰 및 유저 데이터 로컬 스토리지에 똑같이 저장
               localStorage.setItem("kul_accessToken", accessToken);
               localStorage.setItem("kul_refreshToken", refreshToken);
               localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
               localStorage.setItem("kul_userId", String(userId));
-              navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
+              
+              // 대소문자나 공백 실수를 방지하기 위해 trim() 처리 후 가로채기
+              const currentInputId = id.trim();
+              localStorage.setItem("kul_username", currentInputId);
+
+              // 👑 관리자 계정 식별 시 무조건 관리자 화면으로 먼저 강제 라우팅!
+              if (currentInputId === "kulmate01") {
+                alert("관리자 계정으로 로그인되었습니다. 👑");
+                navigate("/admin", { replace: true });
+              } else {
+                // 일반 사용자는 기존 스펙 유지
+                navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
+              }
             } catch {
               setErrorMsg("아이디 또는 비밀번호가 올바르지 않아요.");
             }

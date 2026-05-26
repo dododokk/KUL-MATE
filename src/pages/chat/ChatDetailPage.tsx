@@ -79,7 +79,7 @@ export default function ChatDetailPage() {
       .finally(() => setIsLoading(false));
 
     const client = connectStomp(() => {
-      client.subscribe(`/topic/chats/rooms/${roomId}`, (frame) => {
+      client.subscribe(`/topic/chats/rooms/${roomId}`, (frame: any) => {
         try {
           const incoming: StompChatMessage = JSON.parse(frame.body);
           setMessages((prev) => [

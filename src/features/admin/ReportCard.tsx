@@ -3,8 +3,8 @@ import type { ReportItem } from "./adminDummyData";
 interface ReportCardProps {
   item: ReportItem;
   onDismiss: (id: string) => void;
-  onDeletePost: (id: string) => void;
-  onSuspend: (id: string) => void;
+  onDeletePost: (id: string, targetId: number) => void; // ✨ 수정
+  onSuspend: (id: string, targetId: number) => void; // ✨ 수정
 }
 
 export default function ReportCard({
@@ -53,14 +53,14 @@ export default function ReportCard({
         </button>
         <button
           type="button"
-          onClick={() => onDeletePost(item.id)}
+          onClick={() => onDeletePost(item.id, item.targetId)} // ✨ 수정
           className="flex-1 h-[34px] bg-[#fffbeb] border border-[#fde68a] rounded-xl text-xs font-semibold text-[#b45309]"
         >
           게시글 삭제
         </button>
         <button
           type="button"
-          onClick={() => onSuspend(item.id)}
+          onClick={() => onSuspend(item.id, item.targetId)} // ✨ 수정
           className="flex-1 h-[34px] bg-[#f87171] rounded-xl text-xs font-bold text-white"
         >
           계정 정지
@@ -68,4 +68,4 @@ export default function ReportCard({
       </div>
     </div>
   );
-}
+} 
