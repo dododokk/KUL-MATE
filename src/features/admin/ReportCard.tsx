@@ -68,4 +68,4 @@ export default function ReportCard({
       </div>
     </div>
   );
-}
+} 

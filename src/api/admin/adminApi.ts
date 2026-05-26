@@ -26,4 +26,4 @@ export const adminApi = {
   
   // 8. 사용자 계정 정지
   suspendUser: (userId: number) => api.patch(`/api/admin/users/${userId}/suspend`),
-};
+}; 

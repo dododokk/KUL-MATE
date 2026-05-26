@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [toast, setToast] = useState<{ messages: ToastMsg[]; visible: boolean }>({
     messages: [],
     visible: false,
-  });
+  }); 
 
   const showToast = (messages: ToastMsg[]) => {
     setToast({ messages, visible: true });

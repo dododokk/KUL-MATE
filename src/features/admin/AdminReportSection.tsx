@@ -40,7 +40,7 @@ export default function AdminReportSection({
             onSuspend={onSuspend}
           />
         ))
-      )}
+      )} 
 
       {resolved.length > 0 && (
         <>

@@ -10,7 +10,7 @@ export interface ApprovalItem {
   fileName: string;
   submittedAt: string;
   status: ApprovalStatus;
-}
+} 
 
 export interface ReportItem {
   id: string;

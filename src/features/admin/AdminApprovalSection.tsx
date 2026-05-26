@@ -7,6 +7,7 @@ interface AdminApprovalSectionProps {
   onReject: (id: string, nickname: string) => void;
 }
 
+
 export default function AdminApprovalSection({
   approvals,
   onApprove,
