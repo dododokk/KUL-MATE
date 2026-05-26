@@ -4,8 +4,8 @@ import ReportCard from "./ReportCard";
 interface AdminReportSectionProps {
   reports: ReportItem[];
   onDismiss: (id: string) => void;
-  onDeletePost: (id: string) => void;
-  onSuspend: (id: string) => void;
+  onDeletePost: (id: string, targetId: number) => void; // ✨ 수정
+  onSuspend: (id: string, targetId: number) => void; // ✨ 수정
 }
 
 export default function AdminReportSection({
@@ -40,7 +40,7 @@ export default function AdminReportSection({
             onSuspend={onSuspend}
           />
         ))
-      )}
+      )} 
 
       {resolved.length > 0 && (
         <>

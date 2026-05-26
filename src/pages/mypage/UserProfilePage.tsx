@@ -5,6 +5,7 @@ import type { UserProfileResponse } from "../../api/mypage/type";
 import UserProfileCard from "../../features/mypage/UserProfileCard";
 import profileIcon from "../../assets/chat/profile.svg";
 import reportIcon from "../../assets/mypage/report.svg";
+import ReportModal from "../../features/report/ReportModal"; // ✨ ReportModal import (경로 확인 필수!)
 
 const DORMITORY_LABEL: Record<string, string> = {
   LAKE: "레이크홀",
@@ -21,6 +22,9 @@ export default function UserProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ✨ 신고 모달 열림/닫힘 상태 관리
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -56,8 +60,11 @@ export default function UserProfilePage() {
           </svg>
         </button>
 
-        {/* 신고 버튼 */}
-        <button className="absolute right-[19px] top-[54px] flex items-center justify-center size-[36px]">
+        {/* ✨ 신고 버튼에 onClick 이벤트 추가 */}
+        <button 
+          className="absolute right-[19px] top-[54px] flex items-center justify-center size-[36px]"
+          onClick={() => setIsReportModalOpen(true)}
+        >
           <img src={reportIcon} alt="신고" className="w-[20px] h-[20px]" />
         </button>
 
@@ -103,6 +110,17 @@ export default function UserProfilePage() {
           )}
         </div>
       </div>
+
+      {/* ✨ 모달 컴포넌트 렌더링 */}
+      {profile && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          targetId={Number(userId)}
+          targetType="USER"
+          targetNickname={profile.nickname}
+        />
+      )}
     </div>
   );
 }

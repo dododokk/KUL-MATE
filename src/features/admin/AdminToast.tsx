@@ -21,7 +21,7 @@ export default function AdminToast({ messages, visible }: AdminToastProps) {
       const t = setTimeout(() => setMounted(false), 300);
       return () => clearTimeout(t);
     }
-  }, [visible]);
+  }, [visible]); 
 
   if (!mounted) return null;
 
