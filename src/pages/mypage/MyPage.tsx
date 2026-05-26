@@ -7,9 +7,10 @@ import RoommateCancelModal from "../../features/mypage/RoommateCancelModal";
 import SavedPostList from "../../features/mypage/SavedPostList";
 import type { MyPageTab, MyPost, RoommateInfo, SavedPost, UserProfile } from "../../features/mypage/types";
 
-// 방금 만든 실제 API 함수들을 가져옵니다. (경로는 프로젝트 구조에 맞게 살짝 조절해주세요)
+// 실제 API 함수들을 호출합니다.
 import { getMyPageSummary, getMyPosts } from "../../api/mypage/mypageApi";
 import { deletePost, togglePostVisibility, getBookmarkedPosts, addBookmark, removeBookmark } from "../../api/posts/postsApi";
+import { cancelMatching } from "../../api/request/requestApi"; // ✨ 실시간 해지 API 추가
 import profileIcon from "../../assets/mypage/profile.svg";
 import settingIcon from "../../assets/mypage/setting.svg";
 import noticeIcon from "../../assets/mypage/notice.svg";
@@ -98,11 +99,26 @@ export default function MyPage() {
     return () => clearTimeout(timer);
   }, [showToast]);
 
-  // 가짜 룸메 관계 해지 함수 (실제 연결 시 해지 API 호출 필요)
-  function handleConfirmCancel() {
-    setRoommate(null);
-    setShowCancelModal(false);
-    setShowToast(true);
+  // ✨ 실제 룸메 관계 해지 API 연동 함수로 수정 완료!
+  async function handleConfirmCancel() {
+    // 룸메이트 정보나 백엔드에서 받아와야 할 requestId가 없으면 방어 알림 처리
+    if (!roommate || !(roommate as any).requestId) {
+      alert("매칭 고유 ID(requestId)를 찾을 수 없습니다. 백엔드 응답 데이터를 확인해주세요.");
+      return;
+    }
+
+    try {
+      // 1. 백엔드 해지 API 호출 (PATCH /api/requests/{requestId}/cancel-matching)
+      await cancelMatching((roommate as any).requestId);
+      
+      // 2. 성공 시 프론트엔드 상태 반영 및 UI 업데이트
+      setRoommate(null);
+      setShowCancelModal(false);
+      setShowToast(true);
+    } catch (err) {
+      console.error("룸메이트 해지 오류:", err);
+      alert("룸메이트 해지 처리에 실패했습니다. 다시 시도해주세요.");
+    }
   }
 
   async function handleTogglePublic(id: number) {

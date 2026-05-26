@@ -33,6 +33,7 @@ export interface RoommateInfo {
   dormitoryType: string;
   matchScore: number;
   statusLabel: string; // matchDate 대신 상태 라벨 사용
+  requestId?: number;
 }
 
 // 3. 계정 설정 정보 (GET /api/users/me/settings)
