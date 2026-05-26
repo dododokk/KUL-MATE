@@ -48,6 +48,8 @@ export function apiPostToCard(p: PostSummary): RoommatePost {
     bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
     tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
     date: p.createdAt.slice(0, 10),
+    score: p.matchScore > 0 ? `${p.matchScore}점` : undefined,
+    scoreTone: p.matchScore >= 80 ? "primary" : "mint",
   };
 }
 
