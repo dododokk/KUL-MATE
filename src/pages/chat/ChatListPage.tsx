@@ -1,48 +1,41 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getChatRooms } from "../../api/chat/chatApi";
+import type { ChatRoom } from "../../api/chat/type";
 import AppBottomNav from "../../components/AppBottomNav";
 import ChatListItem from "../../features/chat/ChatListItem";
 import searchIcon from "../../assets/chat/searchIcon.svg";
 import approvalIcon from "../../assets/chat/approval.svg";
 
-type ChatRoom = {
-  id: string;
-  name: string;
-  lastMessage: string;
-  time: string;
-  unreadCount?: number;
-  showReadIcon?: boolean;
-};
-
-const chatRooms: ChatRoom[] = [
-  {
-    id: "1",
-    name: "코딩고수민준",
-    lastMessage: "안녕하세요! 혹시 흡연하시나요?",
-    time: "오후 3:24",
-    unreadCount: 2,
-  },
-  {
-    id: "2",
-    name: "새내기전전지호",
-    lastMessage: "네 저도 규칙적인 편이에요 :)",
-    time: "오전 11:05",
-    showReadIcon: true,
-  },
-  {
-    id: "3",
-    name: "건축하는도현",
-    lastMessage: "주말에 주로 방에 계세요?",
-    time: "어제",
-    showReadIcon: true,
-  },
-];
+function formatTime(isoString: string): string {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) {
+    const h = date.getHours();
+    const m = date.getMinutes().toString().padStart(2, "0");
+    return `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${m}`;
+  }
+  if (diffDays === 1) return "어제";
+  if (diffDays < 7) return `${diffDays}일 전`;
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
 
 export default function ChatListPage() {
   const navigate = useNavigate();
-  const unreadTotal = chatRooms.reduce(
-    (acc, c) => acc + (c.unreadCount ?? 0),
-    0
-  );
+  const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [totalUnread, setTotalUnread] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getChatRooms()
+      .then((data) => {
+        setRooms(data.rooms);
+        setTotalUnread(data.totalUnreadCount);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
 
   return (
     <div
@@ -63,7 +56,7 @@ export default function ChatListPage() {
               채팅
             </h1>
             <p className="font-semibold text-[#7a9e82] text-[12px] leading-[16px] pt-[2px]">
-              {unreadTotal}개의 읽지 않은 메시지
+              {totalUnread}개의 읽지 않은 메시지
             </p>
           </div>
           <button className="flex items-center justify-center rounded-[12px] size-[36px]">
@@ -74,19 +67,39 @@ export default function ChatListPage() {
 
       {/* Chat list */}
       <div className="flex flex-col w-full pt-[8px]">
-        {chatRooms.map((room, idx) => (
-          <ChatListItem
-            key={room.id}
-            name={room.name}
-            lastMessage={room.lastMessage}
-            time={room.time}
-            unreadCount={room.unreadCount}
-            showReadIcon={room.showReadIcon}
-            hasUnread={!!room.unreadCount}
-            isLast={idx === chatRooms.length - 1}
-            onClick={() => navigate(`/chat/${room.id}`)}
-          />
-        ))}
+        {isLoading ? (
+          <div className="flex justify-center py-[48px]">
+            <div className="h-[24px] w-[24px] animate-spin rounded-full border-2 border-[#7a9e82] border-t-transparent" />
+          </div>
+        ) : rooms.length === 0 ? (
+          <div className="flex flex-col items-center py-[64px] gap-[8px]">
+            <p className="text-[14px] font-semibold text-[#374151]">채팅방이 없어요</p>
+            <p className="text-[12px] text-[#9ca3af]">룸메이트에게 채팅을 먼저 보내보세요</p>
+          </div>
+        ) : (
+          rooms.map((room, idx) => (
+            <ChatListItem
+              key={room.roomId}
+              name={room.opponentNickname}
+              lastMessage={room.lastMessage}
+              time={formatTime(room.lastMessageAt)}
+              unreadCount={room.unreadCount}
+              showReadIcon={room.unreadCount === 0}
+              hasUnread={room.unreadCount > 0}
+              isLast={idx === rooms.length - 1}
+              onClick={() =>
+                navigate(`/chat/${room.roomId}`, {
+                  state: {
+                    opponentNickname: room.opponentNickname,
+                    matchScore: room.matchScore,
+                    dormitoryType: room.dormitoryType,
+                    opponentId: room.opponentId,
+                  },
+                })
+              }
+            />
+          ))
+        )}
       </div>
 
       {/* Info banner */}

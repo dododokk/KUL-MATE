@@ -1,11 +1,12 @@
-import axiosInstance from "../axiosInstance"; // 실제 경로에 맞게 수정해주세요
+import axiosInstance from "../axiosInstance";
 import type {
   MyPageSummaryResponse,
   AccountSettingsResponse,
   MyPostResponse,
   SavedPostResponse,
   UpdateSettingsRequest,
-  ChangePasswordRequest
+  ChangePasswordRequest,
+  UserProfileResponse,
 } from "./type";
 
 // 1. 내 마이페이지 요약 조회
@@ -45,6 +46,12 @@ export async function changePassword(body: ChangePasswordRequest): Promise<void>
 // 7. 회원 탈퇴 (요청 바디에 password 포함)
 export async function withdrawAccount(password: string): Promise<void> {
   await axiosInstance.delete("/api/users/me", {
-    data: { password } // axios delete에서 body를 보낼 때는 data 속성을 사용합니다.
+    data: { password }
   });
+}
+
+// 8. 유저 프로필 조회 (GET /api/users/{userId}/profile)
+export async function getUserProfile(userId: number): Promise<UserProfileResponse> {
+  const { data } = await axiosInstance.get<UserProfileResponse>(`/api/users/${userId}/profile`);
+  return data;
 }

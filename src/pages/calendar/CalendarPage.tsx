@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppBottomNav from "../../components/AppBottomNav";
 import AddEventSheet from "../../features/calendar/AddEventSheet";
 import CalendarGrid, { type CalendarEvent, type EventCategory } from "../../features/calendar/CalendarGrid";
+import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents } from "../../api/calendar/calendarApi";
+import { filterEventsForUser } from "../../api/calendar/type";
+import type { CalendarEventType } from "../../api/calendar/type";
 
 function ChevronLeft() {
   return (
@@ -22,18 +25,51 @@ function ChevronRight() {
 const today = new Date();
 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-const MOCK_EVENTS: CalendarEvent[] = [
-  { id: "e1", date: todayStr, title: "오늘 일정", category: "내 일정" },
-  { id: "e2", date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-05`, title: "입사일", category: "입사일" },
-  { id: "e3", date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-20`, title: "기숙사 점검", category: "점검/행사" },
-];
+const TYPE_TO_CATEGORY: Record<CalendarEventType, EventCategory> = {
+  MOVE_IN: "입사일",
+  MOVE_OUT: "퇴사일",
+  INSPECTION: "점검/행사",
+  EVENT: "점검/행사",
+  MY_SCHEDULE: "내 일정",
+  ROOMMATE_SCHEDULE: "룸메이트",
+};
+
+const CATEGORY_TO_TYPE: Record<EventCategory, CalendarEventType> = {
+  입사일: "MOVE_IN",
+  퇴사일: "MOVE_OUT",
+  "점검/행사": "EVENT",
+  "내 일정": "MY_SCHEDULE",
+  룸메이트: "ROOMMATE_SCHEDULE",
+};
+
+function toDateStr(isoString: string): string {
+  return isoString.replace(" ", "T").slice(0, 10);
+}
 
 export default function CalendarPage() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
-  const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const currentUserId = Number(localStorage.getItem("kul_userId"));
+
+  useEffect(() => {
+    getCalendarEvents()
+      .then((data) => {
+        const filtered = filterEventsForUser(data, currentUserId);
+        const mapped: CalendarEvent[] = filtered.map((e) => ({
+          id: String(e.eventId),
+          date: toDateStr(e.startAt),
+          title: e.title,
+          category: TYPE_TO_CATEGORY[e.type],
+          ownerType: e.ownerType,
+        }));
+        setEvents(mapped);
+      })
+      .catch(() => {});
+  }, [currentUserId]);
 
   function prevMonth() {
     if (month === 1) { setYear((y) => y - 1); setMonth(12); }
@@ -49,8 +85,43 @@ export default function CalendarPage() {
     setSelectedDate(dateStr);
   }
 
-  function handleSaveEvent(event: { date: string; title: string; category: EventCategory }) {
-    setEvents((prev) => [...prev, { id: `e-${Date.now()}`, ...event }]);
+  async function handleDeleteEvent(id: string) {
+    const eventId = Number(id);
+    if (isNaN(eventId)) return;
+    const removed = events.find((e) => e.id === id);
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+    try {
+      await deleteCalendarEvent(eventId);
+    } catch {
+      if (removed) setEvents((prev) => [...prev, removed]);
+    }
+  }
+
+  async function handleSaveEvent(event: { date: string; title: string; category: EventCategory }) {
+    const startAt = `${event.date}T00:00:00`;
+    const endAt = `${event.date}T23:59:59`;
+    try {
+      const created = await createCalendarEvent({
+        title: event.title,
+        description: "",
+        startAt,
+        endAt,
+        type: CATEGORY_TO_TYPE[event.category],
+      });
+      setEvents((prev) => [
+        ...prev,
+        {
+          id: String(created.eventId),
+          date: toDateStr(created.startAt),
+          title: created.title,
+          category: TYPE_TO_CATEGORY[created.type],
+          ownerType: created.ownerType,
+        },
+      ]);
+    } catch {
+      // 실패 시 낙관적으로 로컬에만 추가
+      setEvents((prev) => [...prev, { id: `local-${Date.now()}`, ...event }]);
+    }
   }
 
   const selectedEvents = events.filter((e) => e.date === selectedDate);
@@ -133,7 +204,14 @@ export default function CalendarPage() {
                       }`}
                     />
                     <span className="font-normal text-[#374151] text-[13px] leading-[18px]">{e.title}</span>
-                    <span className="ml-auto font-normal text-[#9ca3af] text-[11px] leading-[16px]">{e.category}</span>
+                    {e.ownerType === "ME" && (
+                      <button
+                        className="ml-auto font-normal text-[#9ca3af] text-[11px] leading-[16px]"
+                        onClick={() => handleDeleteEvent(e.id)}
+                      >
+                        삭제
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
