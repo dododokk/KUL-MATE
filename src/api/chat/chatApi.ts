@@ -20,3 +20,8 @@ export async function getChatMessages(roomId: number): Promise<GetMessagesRespon
   );
   return data;
 }
+
+// 채팅방 읽음 처리 (PATCH /api/chats/rooms/{roomId}/read)
+export async function markChatAsRead(roomId: number): Promise<void> {
+  await axiosInstance.patch(`/api/chats/rooms/${roomId}/read`);
+}
