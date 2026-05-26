@@ -14,6 +14,7 @@ export interface NotificationResponse {
   content: string;
   isRead: boolean;
   createdAt: string;
+  requestId: number;
 }
 
 // 1. 알림 목록 조회 (GET /api/notifications)

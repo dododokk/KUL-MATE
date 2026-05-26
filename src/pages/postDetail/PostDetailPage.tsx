@@ -16,7 +16,11 @@ import {
 } from "../../assets/figma/home";
 import editIcon from "../../assets/mypage/edit-mypost.svg";
 import deleteIcon from "../../assets/mypage/delete-mypost.svg";
+
+// 본인과 팀원이 추가한 컴포넌트 모두 임포트
 import ReportPage from "../report/ReportPage";
+import RoommateRequestModal from "../../features/chat/RoommateRequestModal";
+import { applyRoommate } from "../../api/request/requestApi";
 
 const DORM_LABELS: Record<string, string> = { LAKE: "레이크홀" };
 const SMOKING_LABELS: Record<string, string> = {
@@ -70,15 +74,24 @@ function SensitivityDots({ score }: { score: number }) {
 }
 
 export default function PostDetailPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [post, setPost] = useState<PostDetail | null>(null);
+
+  // 팀원이 추가한 상태
   const [isDeleting, setIsDeleting] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
+  // 본인이 추가한 룸메이트 신청 상태
+  const [requestModal, setRequestModal] = useState<
+    "none" | "confirm" | "success"
+  >("none");
+
+  // 내 게시글인지 확인하는 로직
   const currentUserId = Number(localStorage.getItem("kul_userId"));
+  const isMyPost = post?.author?.authorId === currentUserId;
 
   useEffect(() => {
     const idParam = searchParams.get("id");
@@ -88,11 +101,12 @@ export default function PostDetailPage() {
     getPost(postId)
       .then((data) => {
         setPost(data);
-        setIsBookmarked(data.bookmarked); // 백엔드 응답에 맞게 수정 필요시 확인
+        setIsBookmarked(data.bookmarked);
       })
       .catch(() => setPost(null));
   }, [searchParams]);
 
+  // 북마크 토글 기능 (팀원 API 코드 병합)
   const handleBookmarkToggle = async () => {
     if (!post) return;
     try {
@@ -107,21 +121,38 @@ export default function PostDetailPage() {
     }
   };
 
+  // 삭제 기능 (팀원 기능 구현)
   const handleDelete = async () => {
     if (!post) return;
-    if (!window.confirm("구인글을 삭제하시겠습니까?")) return;
-    setIsDeleting(true);
-    try {
-      await deletePost(post.postId);
-      navigate("/home", { replace: true });
-    } catch {
-      alert("삭제에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setIsDeleting(false);
+    if (confirm("정말로 게시글을 삭제하시겠습니까?")) {
+      setIsDeleting(true);
+      try {
+        await deletePost(post.postId);
+        alert("게시글이 삭제되었습니다.");
+        navigate("/home");
+      } catch (err) {
+        console.error("삭제 실패:", err);
+        alert("삭제 처리에 실패했습니다.");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
-  const isMyPost = !!post && post.author.authorId === currentUserId;
+  // 룸메이트 신청 API 호출 (본인 기능)
+  const handleApplyRoommate = async () => {
+    if (!post) return;
+    try {
+      await applyRoommate(post.postId);
+      setRequestModal("success");
+    } catch (err: any) {
+      console.error("신청 실패:", err);
+      alert(
+        err.response?.data?.message || "룸메이트 신청 중 오류가 발생했습니다.",
+      );
+      setRequestModal("none");
+    }
+  };
 
   const lifestyle = post?.lifestyle;
 
@@ -133,19 +164,13 @@ export default function PostDetailPage() {
         ["샤워 시간", l(SHOWER_LABELS, lifestyle.showerTime)],
         ["잠버릇", l(SLEEP_HABIT_LABELS, lifestyle.sleepHabit)],
         ["본가 방문", l(HOME_VISIT_LABELS, lifestyle.homeVisitFrequency)],
-        [
-          "취침",
-          `${lifestyle.sleepStartTime.slice(0, 5)} ~ ${lifestyle.sleepEndTime.slice(0, 5)}`,
-        ],
-        [
-          "기상",
-          `${lifestyle.wakeUpStartTime.slice(0, 5)} ~ ${lifestyle.wakeUpEndTime.slice(0, 5)}`,
-        ],
+        ["취침", `${lifestyle.sleepStartTime} ~ ${lifestyle.sleepEndTime}`],
+        ["기상", `${lifestyle.wakeUpStartTime} ~ ${lifestyle.wakeUpEndTime}`],
       ]
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f8faf8] pb-28">
+    <div className="min-h-screen bg-[#f8faf8] pb-28 relative">
       <header className="sticky top-0 z-10 flex h-[109px] items-end justify-between border-b border-[#f3f4f6] bg-white px-4 pb-[17px]">
         <div className="flex w-[76px] items-center justify-start">
           <Link
@@ -153,7 +178,7 @@ export default function PostDetailPage() {
             className="flex h-9 w-9 items-center justify-center text-[#6b7280]"
           >
             <img
-              src={recIconBack}
+              src={recIconBack} // 뒤로가기 아이콘으로 정상화!
               alt="뒤로가기 아이콘"
               className="h-6 w-6 object-contain"
             />
@@ -168,11 +193,15 @@ export default function PostDetailPage() {
           {isMyPost ? (
             <>
               <Link
-                to={`/post/create?id=${post.postId}`}
+                to={`/post/create?id=${post?.postId}`}
                 className="flex h-9 w-9 items-center justify-center"
                 aria-label="수정"
               >
-                <img src={editIcon} alt="수정" className="h-4 w-4 object-contain" />
+                <img
+                  src={editIcon}
+                  alt="수정"
+                  className="h-4 w-4 object-contain"
+                />
               </Link>
               <button
                 type="button"
@@ -181,7 +210,11 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center disabled:opacity-50"
                 aria-label="삭제"
               >
-                <img src={deleteIcon} alt="삭제" className="h-4 w-4 object-contain" />
+                <img
+                  src={deleteIcon}
+                  alt="삭제"
+                  className="h-4 w-4 object-contain"
+                />
               </button>
             </>
           ) : (
@@ -193,7 +226,9 @@ export default function PostDetailPage() {
                 aria-label="북마크"
               >
                 <img
-                  src={isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted}
+                  src={
+                    isBookmarked ? recIconBookmarkActive : recIconBookmarkMuted
+                  }
                   alt="북마크"
                   className="block h-[20px] w-[20px]"
                   draggable={false}
@@ -205,7 +240,11 @@ export default function PostDetailPage() {
                 className="flex h-9 w-9 items-center justify-center"
                 aria-label="신고하기"
               >
-                <img src={recIconReport} alt="신고하기 아이콘" className="h-6 w-6 object-contain" />
+                <img
+                  src={recIconReport}
+                  alt="신고하기 아이콘"
+                  className="h-6 w-6 object-contain"
+                />
               </button>
             </>
           )}
@@ -321,9 +360,10 @@ export default function PostDetailPage() {
         </p>
       </main>
 
-      <footer className="fixed bottom-0 left-0 w-full border-t border-[#f3f4f6] bg-white px-5 pb-8 pt-[13px]">
-        <div className="flex gap-3">
-          {!isMyPost && (
+      {/* 내 글이 아닐 때만 하단 채팅/신청 푸터를 보여줍니다 */}
+      {!isMyPost && (
+        <footer className="fixed bottom-0 left-0 w-full border-t border-[#f3f4f6] bg-white px-5 pb-8 pt-[13px]">
+          <div className="flex gap-3">
             <button
               type="button"
               disabled={isChatLoading || !post}
@@ -349,18 +389,33 @@ export default function PostDetailPage() {
             >
               {isChatLoading ? "연결 중..." : "채팅하기"}
             </button>
-          )}
-          <button className="h-12 flex-1 rounded-[12px] bg-[#7a9e82] text-[14px] font-bold text-white">
-            룸메이트 신청
-          </button>
-        </div>
-      </footer>
+            <button
+              type="button"
+              onClick={() => setRequestModal("confirm")}
+              className="h-12 flex-1 rounded-[12px] bg-[#7a9e82] text-[14px] font-bold text-white"
+            >
+              룸메이트 신청
+            </button>
+          </div>
+        </footer>
+      )}
 
+      {/* 신고 모달 (팀원 병합 코드) */}
       {showReportModal && post && (
         <ReportPage
           targetType="POST"
           targetId={post.postId}
           onClose={() => setShowReportModal(false)}
+        />
+      )}
+
+      {/* 룸메이트 신청 확인/완료 모달 (본인 코드) */}
+      {requestModal !== "none" && post && (
+        <RoommateRequestModal
+          userName={post.author.nickname}
+          mode={requestModal}
+          onConfirm={handleApplyRoommate}
+          onClose={() => setRequestModal("none")}
         />
       )}
     </div>
