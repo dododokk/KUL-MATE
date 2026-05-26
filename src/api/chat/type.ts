@@ -19,7 +19,8 @@ export interface StompChatMessage {
   matchScore: number;
   dormitoryType: string;
   content: string;
-  createdAt: string;
+  createdAt?: string;
+  sentAt?: string;
   mine: boolean;
 }
 

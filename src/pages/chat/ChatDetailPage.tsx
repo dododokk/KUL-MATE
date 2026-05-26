@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getChatMessages } from "../../api/chat/chatApi";
+import { getChatMessages, markChatAsRead } from "../../api/chat/chatApi";
 import { connectStomp, sendChatMessage } from "../../api/chat/stompClient";
 import type { ChatMessage, StompChatMessage } from "../../api/chat/type";
 import RoommateRequestModal from "../../features/chat/RoommateRequestModal";
@@ -13,10 +13,13 @@ type RoomState = {
   dormitoryType?: string;
 };
 
-function formatMessageTime(isoString: string): string {
-  const date = new Date(isoString);
-  const h = date.getHours();
-  const m = date.getMinutes().toString().padStart(2, "0");
+function formatMessageTime(isoString: string | undefined): string {
+  if (!isoString) return "";
+  const normalized = isoString.replace(" ", "T");
+  const date = new Date(normalized);
+  const target = isNaN(date.getTime()) ? new Date() : date;
+  const h = target.getHours();
+  const m = target.getMinutes().toString().padStart(2, "0");
   return `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${m}`;
 }
 
@@ -67,6 +70,7 @@ export default function ChatDetailPage() {
   useEffect(() => {
     if (!roomId) return;
     setIsLoading(true);
+    markChatAsRead(roomId).catch(() => {});
     getChatMessages(roomId)
       .then((data) => setMessages(data))
       .catch(() => setMessages([]))
@@ -86,7 +90,7 @@ export default function ChatDetailPage() {
               matchScore: incoming.matchScore,
               dormitoryType: incoming.dormitoryType,
               content: incoming.content,
-              sentAt: incoming.createdAt,
+              sentAt: incoming.createdAt ?? incoming.sentAt ?? "",
             },
           ]);
         } catch {}
@@ -107,7 +111,6 @@ export default function ChatDetailPage() {
   function handleSend() {
     const text = inputText.trim();
     if (!text) return;
-
     setInputText("");
     sendChatMessage(roomId, text);
   }

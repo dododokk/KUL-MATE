@@ -5,6 +5,7 @@ export type CalendarEvent = {
   date: string; // "YYYY-MM-DD"
   title: string;
   category: EventCategory;
+  ownerType?: "ME" | "ROOMMATE";
 };
 
 const DOT_COLOR: Record<EventCategory, string> = {
