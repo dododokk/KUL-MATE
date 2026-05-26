@@ -4,6 +4,7 @@ import { getChatMessages, markChatAsRead } from "../../api/chat/chatApi";
 import { connectStomp, sendChatMessage } from "../../api/chat/stompClient";
 import type { ChatMessage, StompChatMessage } from "../../api/chat/type";
 import RoommateRequestModal from "../../features/chat/RoommateRequestModal";
+import { applyRoommate } from "../../api/request/requestApi";
 import sendIcon from "../../assets/chat/send.svg";
 import profileIcon from "../../assets/chat/profile.svg";
 
@@ -12,6 +13,7 @@ type RoomState = {
   matchScore?: number;
   dormitoryType?: string;
   opponentId?: number;
+  postId?: number;
 };
 
 function formatMessageTime(isoString: string | undefined): string {
@@ -56,6 +58,7 @@ export default function ChatDetailPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const opponentId = state.opponentId;
+  const postId = state.postId;
   const opponentNickname =
     state.opponentNickname ??
     messages.find((m) => m.senderId !== currentUserId)?.senderNickname ??
@@ -124,8 +127,15 @@ export default function ChatDetailPage() {
     }
   }
 
-  function handleRequestConfirm() {
-    setModal("success");
+  async function handleRequestConfirm() {
+    if (!postId) return;
+    try {
+      await applyRoommate(postId);
+      setModal("success");
+    } catch {
+      setModal("none");
+      alert("룸메이트 신청에 실패했어요. 이미 신청했거나 매칭된 상태일 수 있어요.");
+    }
   }
 
   function handleModalClose() {

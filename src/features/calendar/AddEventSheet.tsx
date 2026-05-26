@@ -10,7 +10,6 @@ type Props = {
 
 const CATEGORIES: { label: EventCategory; color: string; active: string }[] = [
   { label: "내 일정", color: "border-[#a78bfa] text-[#a78bfa]", active: "bg-[#a78bfa] text-white border-[#a78bfa]" },
-  { label: "룸메이트", color: "border-[#38bdf8] text-[#38bdf8]", active: "bg-[#38bdf8] text-white border-[#38bdf8]" },
   { label: "점검/행사", color: "border-[#fbbf24] text-[#fbbf24]", active: "bg-[#fbbf24] text-white border-[#fbbf24]" },
   { label: "입사일", color: "border-[#7a9e82] text-[#7a9e82]", active: "bg-[#7a9e82] text-white border-[#7a9e82]" },
   { label: "퇴사일", color: "border-[#f87171] text-[#f87171]", active: "bg-[#f87171] text-white border-[#f87171]" },
