@@ -63,7 +63,10 @@ export default function CalendarPage() {
           id: String(e.eventId),
           date: toDateStr(e.startAt),
           title: e.title,
-          category: TYPE_TO_CATEGORY[e.type],
+          category:
+            e.type === "MY_SCHEDULE" && e.ownerType === "ROOMMATE"
+              ? "룸메이트"
+              : TYPE_TO_CATEGORY[e.type],
           ownerType: e.ownerType,
         }));
         setEvents(mapped);
