@@ -21,6 +21,39 @@ export function dormLabel(type: string): string {
   return type;
 }
 
+const TAG_LABEL: Record<string, string> = {
+  // 흡연
+  SMOKER: "흡연",
+  NON_SMOKER: "비흡연",
+  // 샤워
+  MORNING: "아침 샤워",
+  EVENING: "저녁 샤워",
+  NIGHT: "밤 샤워",
+  // 잠버릇
+  NONE: "잠버릇 없음",
+  NORMAL: "잠버릇 있음",
+  SEVERE: "잠버릇 심함",
+  SNORING: "코골이",
+  GRINDING: "이갈이",
+  // 귀가 빈도
+  WEEKLY: "매주 귀가",
+  BIWEEKLY: "2주마다 귀가",
+  MONTHLY_OR_MORE: "월 1회 귀가",
+  RARE: "드물게 귀가",
+  // 취침 시간대
+  EARLY: "일찍 취침",
+  LATE: "늦게 취침",
+  // 방 취식
+  ALLOWED: "방 취식 가능",
+  NOT_ALLOWED: "방 취식 불가",
+  // 생활관
+  LAKE: "레이크홀",
+  OTHER: "비레이크홀",
+  // 거주 기간
+  FOUR_MONTH: "4개월",
+  SIX_MONTH: "6개월",
+};
+
 export type RoommatePost = {
   id: string;
   nickname: string;
@@ -46,7 +79,7 @@ export function apiPostToCard(p: PostSummary): RoommatePost {
     sleepTime: `${p.sleepStartTime.slice(0, 5)} - ${p.sleepEndTime.slice(0, 5)}`,
     wakeTime: `${p.wakeUpStartTime.slice(0, 5)} - ${p.wakeUpEndTime.slice(0, 5)}`,
     bookmarkIcon: p.bookmarked ? recIconBookmarkActive : recIconBookmarkMuted,
-    tags: p.tags.map((tag, i) => ({ label: tag, bg: pillBgs[i % pillBgs.length] })),
+    tags: p.tags.map((tag, i) => ({ label: TAG_LABEL[tag] ?? tag, bg: pillBgs[i % pillBgs.length] })),
     date: p.createdAt.slice(0, 10),
     score: p.matchScore > 0 ? `${p.matchScore}점` : undefined,
     scoreTone: p.matchScore >= 80 ? "primary" : "mint",
