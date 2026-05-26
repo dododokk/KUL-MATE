@@ -14,6 +14,29 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg("");
+    try {
+      const res = await login({ username: id, password });
+      const { accessToken, refreshToken, isOnboardingCompleted, userId } = res.data;
+      localStorage.setItem("kul_accessToken", accessToken);
+      localStorage.setItem("kul_refreshToken", refreshToken);
+      localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
+      localStorage.setItem("kul_userId", String(userId));
+      const currentInputId = id.trim();
+      localStorage.setItem("kul_username", currentInputId);
+      if (currentInputId === "kulmate01") {
+        alert("관리자 계정으로 로그인되었습니다. 👑");
+        navigate("/admin", { replace: true });
+      } else {
+        navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
+      }
+    } catch {
+      setErrorMsg("아이디 또는 비밀번호가 올바르지 않아요.");
+    }
+  }
+
   return (
     <div className="flex w-full flex-col px-6 pb-10 pt-8">
       <h2
@@ -23,7 +46,7 @@ export default function LoginForm() {
         로그인
       </h2>
 
-      <div className="flex flex-col gap-4">
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
         {/* ID field */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-[#374151]">아이디</label>
@@ -72,35 +95,7 @@ export default function LoginForm() {
           <p className="text-xs text-[#f87171] text-center">{errorMsg}</p>
         )}
         <button
-          type="button"
-          onClick={async () => {
-            setErrorMsg("");
-            try {
-              const res = await login({ username: id, password });
-              const { accessToken, refreshToken, isOnboardingCompleted, userId } = res.data;
-              
-              // 기존 토큰 및 유저 데이터 로컬 스토리지에 똑같이 저장
-              localStorage.setItem("kul_accessToken", accessToken);
-              localStorage.setItem("kul_refreshToken", refreshToken);
-              localStorage.setItem("kul_isOnboardingCompleted", String(isOnboardingCompleted));
-              localStorage.setItem("kul_userId", String(userId));
-              
-              // 대소문자나 공백 실수를 방지하기 위해 trim() 처리 후 가로채기
-              const currentInputId = id.trim();
-              localStorage.setItem("kul_username", currentInputId);
-
-              // 👑 관리자 계정 식별 시 무조건 관리자 화면으로 먼저 강제 라우팅!
-              if (currentInputId === "kulmate01") {
-                alert("관리자 계정으로 로그인되었습니다. 👑");
-                navigate("/admin", { replace: true });
-              } else {
-                // 일반 사용자는 기존 스펙 유지
-                navigate(isOnboardingCompleted ? "/home" : "/onboarding", { replace: true });
-              }
-            } catch {
-              setErrorMsg("아이디 또는 비밀번호가 올바르지 않아요.");
-            }
-          }}
+          type="submit"
           className="mt-2 h-12 w-full rounded-xl text-sm font-bold text-white"
           style={{
             background:
@@ -109,7 +104,7 @@ export default function LoginForm() {
         >
           로그인
         </button>
-      </div>
+      </form>
 
       {/* Find ID / Reset password */}
       <div className="mt-6 flex items-center justify-center gap-4">
