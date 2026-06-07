@@ -18,30 +18,37 @@ import CalendarPage from "../pages/calendar/CalendarPage";
 import MyPage from "../pages/mypage/MyPage";
 import AccountSettingsPage from "../pages/mypage/AccountSettingsPage";
 import UserProfilePage from "../pages/mypage/UserProfilePage";
+import PrivateRoute from "./PrivateRoute";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 공개 라우트 */}
         <Route path="/" element={<SplashPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/chat" element={<ChatListPage />} />
-        <Route path="/chat/:id" element={<ChatDetailPage />} />
-        <Route path="/post/detail" element={<PostDetailPage />} />
-        <Route path="/post/create" element={<PostCreatePage />} />
-        <Route path="/report" element={<ReportPage />} />
-        <Route path="/search" element={<SearchPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/survey" element={<SurveyPage />} />
-        <Route path="/survey/preference" element={<PreferenceSurveyPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/alarm" element={<AlarmPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/my" element={<MyPage />} />
-        <Route path="/my/settings" element={<AccountSettingsPage />} />
-        <Route path="/profile/:userId" element={<UserProfilePage />} />
+
+        {/* 인증 필요 라우트 */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/chat" element={<ChatListPage />} />
+          <Route path="/chat/:id" element={<ChatDetailPage />} />
+          <Route path="/post/detail" element={<PostDetailPage />} />
+          <Route path="/post/create" element={<PostCreatePage />} />
+          <Route path="/report" element={<ReportPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/survey" element={<SurveyPage />} />
+          <Route path="/survey/preference" element={<PreferenceSurveyPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/alarm" element={<AlarmPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/my" element={<MyPage />} />
+          <Route path="/my/settings" element={<AccountSettingsPage />} />
+          <Route path="/profile/:userId" element={<UserProfilePage />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
